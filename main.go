@@ -7,23 +7,17 @@ import (
 	"github.com/machanirobotics/flatconverter/pkg/converter"
 )
 
-// import (
-// 	"context"
-// 	"fmt"
-// 	"log"
-
-// 	"github.com/bufbuild/protocompile"
-// 	"github.com/bufbuild/protocompile/reporter"
-// )
-
 func main() {
-	c := converter.NewConverter("deps/", "cleaned/")
-	err := c.Clean(context.Background())
+	protoDir := "deps"
+	cleanedDir := "cleaned"
+	flatDir := "flatbuffers"
+
+	c, err := converter.NewConverter(converter.CONVERTER_TYPE_FLATBUFFER, protoDir, cleanedDir, flatDir)
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = c.Convert(context.Background(), "flatbuffers/")
-	if err != nil {
+
+	if err := c.Convert(context.Background(), true); err != nil {
 		log.Fatal(err)
 	}
 }
