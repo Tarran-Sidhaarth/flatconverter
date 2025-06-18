@@ -1,4 +1,4 @@
-#Flatconverter
+# Flatconverter
 
 A cli wrapper around flatc for easy conversion of proto files to fbs files
 
