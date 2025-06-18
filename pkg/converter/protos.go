@@ -1,3 +1,5 @@
+// Package converter provides functions for cleaning and processing Protocol Buffer files,
+// specifically removing Google API imports and reconstructing proto file content.
 package converter
 
 import (
@@ -11,7 +13,21 @@ import (
 	"google.golang.org/protobuf/types/descriptorpb"
 )
 
-func removeGoogleAPI(ctx context.Context, compiler *protocompile.Compiler, files []string, outputDir string) (map[string][]byte, error) {
+// removeGoogleAPI returns a map of cleaned proto file paths to their content,
+// with Google API imports and google/protobuf/descriptor.proto removed.
+//
+// It compiles the given proto files, reconstructs their content (syntax, package,
+// imports, options, enums, messages, services), and writes the cleaned content
+// to the outputDir with the original file's relative path as the key.
+//
+// ctx: Context for compilation and cancellation.
+// compiler: The proto compiler to use.
+// files: List of proto file paths to process.
+// outputDir: Directory to use as the root for output file paths.
+//
+// Returns a map where keys are output file paths and values are file contents.
+// Returns an error if compilation fails.
+func removeGoogleAPI(ctx context.Context, compiler *protocompile.Compiler, files []string, outputDir, prefix string) (map[string][]byte, error) {
 	fileDetails := make(map[string][]byte)
 	fds, err := compiler.Compile(ctx, files...)
 	if err != nil {
@@ -26,7 +42,7 @@ func removeGoogleAPI(ctx context.Context, compiler *protocompile.Compiler, files
 
 		// Write package
 		if fd.Package() != "" {
-			builder.WriteString(fmt.Sprintf("package %s;\n\n", fd.Package()))
+			builder.WriteString(fmt.Sprintf("package %s%s;\n\n", strings.Replace(prefix, "/", ".", 1), fd.Package()))
 		}
 
 		// Write imports excluding Google API imports and google/protobuf/descriptor.proto
@@ -38,7 +54,7 @@ func removeGoogleAPI(ctx context.Context, compiler *protocompile.Compiler, files
 			// Skip google/api imports and google/protobuf/descriptor.proto
 			if !strings.HasPrefix(importPath, "google/api") &&
 				!strings.Contains(importPath, "google/protobuf/descriptor.proto") {
-				builder.WriteString(fmt.Sprintf("import \"%s\";\n", importPath))
+				builder.WriteString(fmt.Sprintf("import \"%s%s\";\n", prefix, importPath))
 				hasImports = true
 			}
 		}
@@ -49,22 +65,15 @@ func removeGoogleAPI(ctx context.Context, compiler *protocompile.Compiler, files
 		// Write file options exactly as they are (no modifications)
 		opts := fd.Options().(*descriptorpb.FileOptions)
 		if opts != nil {
-			// Handle go_package option (keep original)
 			if opts.GoPackage != nil {
 				builder.WriteString(fmt.Sprintf("option go_package = \"%s\";\n", *opts.GoPackage))
 			}
-
-			// Handle java_multiple_files option
 			if opts.JavaMultipleFiles != nil {
 				builder.WriteString(fmt.Sprintf("option java_multiple_files = %t;\n", *opts.JavaMultipleFiles))
 			}
-
-			// Handle java_outer_classname option
 			if opts.JavaOuterClassname != nil {
 				builder.WriteString(fmt.Sprintf("option java_outer_classname = \"%s\";\n", *opts.JavaOuterClassname))
 			}
-
-			// Handle java_package option (keep original)
 			if opts.JavaPackage != nil {
 				builder.WriteString(fmt.Sprintf("option java_package = \"%s\";\n", *opts.JavaPackage))
 			}
@@ -92,7 +101,7 @@ func removeGoogleAPI(ctx context.Context, compiler *protocompile.Compiler, files
 			writeService(&builder, svc, fd)
 		}
 
-		// Store the built proto content in map with key as CleanedDir + fd.Path()
+		// Store the built proto content in map with key as outputDir + fd.Path()
 		key := filepath.Join(outputDir, fd.Path())
 		fileDetails[key] = []byte(builder.String())
 	}
@@ -100,9 +109,12 @@ func removeGoogleAPI(ctx context.Context, compiler *protocompile.Compiler, files
 	return fileDetails, nil
 }
 
+// writeEnum writes the declaration and values of an enum to the builder.
+//
+// builder: The strings.Builder to write to.
+// enum: The EnumDescriptor representing the enum.
 func writeEnum(builder *strings.Builder, enum protoreflect.EnumDescriptor) {
 	builder.WriteString(fmt.Sprintf("enum %s {\n", enum.Name()))
-
 	values := enum.Values()
 	for i := 0; i < values.Len(); i++ {
 		value := values.Get(i)
@@ -111,6 +123,11 @@ func writeEnum(builder *strings.Builder, enum protoreflect.EnumDescriptor) {
 	builder.WriteString("}\n\n")
 }
 
+// writeMessage writes the declaration, fields, nested enums, and nested messages of a message to the builder.
+//
+// builder: The strings.Builder to write to.
+// msg: The MessageDescriptor representing the message.
+// indent: Indentation level (number of indents to apply).
 func writeMessage(builder *strings.Builder, msg protoreflect.MessageDescriptor, indent int) {
 	indentStr := strings.Repeat("  ", indent)
 
@@ -134,8 +151,6 @@ func writeMessage(builder *strings.Builder, msg protoreflect.MessageDescriptor, 
 	for i := 0; i < oneofs.Len(); i++ {
 		oneof := oneofs.Get(i)
 		builder.WriteString(fmt.Sprintf("%s  oneof %s {\n", indentStr, oneof.Name()))
-
-		// Find fields that belong to this oneof
 		fields := msg.Fields()
 		for j := 0; j < fields.Len(); j++ {
 			field := fields.Get(j)
@@ -165,17 +180,23 @@ func writeMessage(builder *strings.Builder, msg protoreflect.MessageDescriptor, 
 	builder.WriteString(fmt.Sprintf("%s}\n\n", indentStr))
 }
 
+// writeField writes a single field declaration to the builder, with appropriate type and indentation.
+//
+// builder: The strings.Builder to write to.
+// field: The FieldDescriptor representing the field.
+// indent: Indentation level (number of indents to apply).
 func writeField(builder *strings.Builder, field protoreflect.FieldDescriptor, indent int) {
 	indentStr := strings.Repeat("  ", indent)
-
-	// Determine field type
 	fieldType := getFieldType(field)
-
-	// Write field definition exactly as parsed (Google API annotations are automatically excluded)
 	builder.WriteString(fmt.Sprintf("%s%s %s = %d;\n",
 		indentStr, fieldType, field.Name(), field.Number()))
 }
 
+// getFieldType returns the string representation of a field's type,
+// including repeated, message, and enum types with fully qualified names if necessary.
+//
+// field: The FieldDescriptor to analyze.
+// Returns the field type as a string.
 func getFieldType(field protoreflect.FieldDescriptor) string {
 	prefix := ""
 	if field.Cardinality() == protoreflect.Repeated {
@@ -203,13 +224,10 @@ func getFieldType(field protoreflect.FieldDescriptor) string {
 	case protoreflect.BytesKind:
 		baseType = "bytes"
 	case protoreflect.MessageKind:
-		// Use fully qualified name for message types
 		msgDesc := field.Message()
 		if msgDesc.Parent() != nil {
-			// For nested messages, we need to build the full path
 			baseType = getFullMessageName(msgDesc)
 		} else {
-			// For top-level messages, include package if it exists
 			if pkg := msgDesc.ParentFile().Package(); pkg != "" {
 				baseType = string(pkg) + "." + string(msgDesc.Name())
 			} else {
@@ -217,7 +235,6 @@ func getFieldType(field protoreflect.FieldDescriptor) string {
 			}
 		}
 	case protoreflect.EnumKind:
-		// Similar fix for enum types
 		enumDesc := field.Enum()
 		if enumDesc.Parent() != nil {
 			baseType = getFullEnumName(enumDesc)
@@ -235,11 +252,12 @@ func getFieldType(field protoreflect.FieldDescriptor) string {
 	return prefix + baseType
 }
 
-// Helper function to get full message name including nested path
+// getFullMessageName returns the fully qualified name of a message, including nested paths and package.
+//
+// msgDesc: The MessageDescriptor to analyze.
+// Returns the full message name as a string.
 func getFullMessageName(msgDesc protoreflect.MessageDescriptor) string {
 	var parts []string
-
-	// Build the path from the message up to the file
 	current := msgDesc
 	for current != nil {
 		parts = append([]string{string(current.Name())}, parts...)
@@ -253,47 +271,44 @@ func getFullMessageName(msgDesc protoreflect.MessageDescriptor) string {
 			break
 		}
 	}
-
-	// Add package if it exists
 	if pkg := msgDesc.ParentFile().Package(); pkg != "" {
 		return string(pkg) + "." + strings.Join(parts, ".")
 	}
-
 	return strings.Join(parts, ".")
 }
 
-// Helper function to get full enum name including nested path
+// getFullEnumName returns the fully qualified name of an enum, including nested paths and package.
+//
+// enumDesc: The EnumDescriptor to analyze.
+// Returns the full enum name as a string.
 func getFullEnumName(enumDesc protoreflect.EnumDescriptor) string {
 	var parts []string
-
-	// Add the enum name
 	parts = append(parts, string(enumDesc.Name()))
-
-	// Check if it's nested in a message
 	if parent := enumDesc.Parent(); parent != nil {
 		if parentMsg, ok := parent.(protoreflect.MessageDescriptor); ok {
 			parentName := getFullMessageName(parentMsg)
 			return parentName + "." + strings.Join(parts, ".")
 		}
 	}
-
-	// Add package if it exists
 	if pkg := enumDesc.ParentFile().Package(); pkg != "" {
 		return string(pkg) + "." + strings.Join(parts, ".")
 	}
-
 	return strings.Join(parts, ".")
 }
 
+// writeService writes the declaration of a service and its methods to the builder.
+//
+// For services in the "google.longrunning" package, the service is not written.
+// builder: The strings.Builder to write to.
+// svc: The ServiceDescriptor representing the service.
+// fd: The FileDescriptor containing the service.
 func writeService(builder *strings.Builder, svc protoreflect.ServiceDescriptor, fd protoreflect.FileDescriptor) {
 	// Special handling for google/longrunning - only write messages, not RPC calls
 	if strings.Contains(string(fd.Package()), "google.longrunning") {
-		// Skip writing the service for longrunning files
 		return
 	}
 
 	builder.WriteString(fmt.Sprintf("service %s {\n", svc.Name()))
-
 	methods := svc.Methods()
 	for i := 0; i < methods.Len(); i++ {
 		method := methods.Get(i)

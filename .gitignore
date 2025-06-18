@@ -2,3 +2,4 @@ deps
 cleaned
 flatbuffers/
 output.txt
+test.sh
