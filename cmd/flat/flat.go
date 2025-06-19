@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/machanirobotics/flatconverter/pkg/converter"
 	"github.com/machanirobotics/flatconverter/pkg/generator"
@@ -26,21 +25,19 @@ var FlatCmd = &cobra.Command{
 		}
 		packagePrefix := make(map[generator.Languages]string)
 		langs := []generator.Languages{}
-		for lang := range strings.SplitSeq(strings.TrimSpace(languages), ",") {
-			lang, err := generator.StringToLanguage(lang)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-			langs = append(langs, lang)
-			switch lang {
-			case generator.GO:
-				packagePrefix[lang] = goModule
-			case generator.JAVA:
-				packagePrefix[lang] = javaPackage
-			default:
-				packagePrefix[lang] = ""
-			}
+		lang, err := generator.StringToLanguage(languages)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		langs = append(langs, lang)
+		switch lang {
+		case generator.GO:
+			packagePrefix[lang] = goModule
+		case generator.JAVA:
+			packagePrefix[lang] = javaPackage
+		default:
+			packagePrefix[lang] = ""
 		}
 		g, err := generator.NewGenerator(generator.FLATBUFFER, flatbufferDir, generatedDir, packagePrefix)
 		if err != nil {

@@ -3,15 +3,15 @@ package generator
 import (
 	"fmt"
 	"os/exec"
-	"strings"
 )
 
 const flatcCommand = "flatc %s %s -o %s %s %s" // include paths, language, output directory, package prefix, fbs file directory
 
 func executeCommand(cmdStr string) error {
-	// Split the command string into command and arguments
-	cmdArgs := strings.Fields(cmdStr)
-	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
+	fullCmd := fmt.Sprintf("shopt -s globstar; %s", cmdStr)
+
+	// Use bash -c to enable shell glob expansion
+	cmd := exec.Command("bash", "-c", fullCmd)
 
 	// Run the command and capture output
 	output, err := cmd.CombinedOutput()
