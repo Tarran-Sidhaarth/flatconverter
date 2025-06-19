@@ -8,10 +8,10 @@ import (
 )
 
 func main() {
-	protoDir := "deps"
-	cleanedDir := "cleaned"
-	flatDir := "flatbuffers"
-	prefix := "fb"
+	protoDir := "/home/tarransidhaarth/Desktop/bruh/temp/test/deps"
+	cleanedDir := "/home/tarransidhaarth/Desktop/bruh/temp/test/cleaned"
+	flatDir := "/home/tarransidhaarth/Desktop/bruh/temp/test/flatbuffers"
+	prefix := ""
 	c, err := converter.NewConverter(converter.FLATBUFFER, protoDir, cleanedDir, flatDir, prefix)
 	if err != nil {
 		log.Fatal(err)

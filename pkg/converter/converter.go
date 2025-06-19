@@ -39,7 +39,7 @@ type Converter interface {
 // Returns a Converter and nil error on success.
 // Returns a non-nil error if the converterType is invalid.
 func NewConverter(converterType ConverterType, protoDir, cleanedDir, targetDir, prefix string) (Converter, error) {
-	if !strings.HasSuffix(prefix, "/") {
+	if !strings.HasSuffix(prefix, "/") && prefix != "" {
 		prefix += "/"
 	}
 	switch converterType {
