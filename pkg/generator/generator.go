@@ -1,16 +1,25 @@
 package generator
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
-type Languages int
+type GeneratorType int
 
 const (
-	CPP = iota
-	GO
-	JAVA
-	KOTLIN
+	FLATBUFFER = iota
 )
 
 type Generator interface {
 	Generate(ctx context.Context, languages []Languages) error
+}
+
+func NewGenerator(generatorType GeneratorType, flatbufferDir, targetDir string, packagePrefix map[Languages]string) (Generator, error) {
+	switch generatorType {
+	case FLATBUFFER:
+		return newFlatGenerator(flatbufferDir, targetDir, packagePrefix)
+	default:
+		return nil, fmt.Errorf("invalid type")
+	}
 }
