@@ -1,0 +1,88 @@
+# Configuration template for buffman
+# This file demonstrates all available configuration options
+
+# Convert section - for converting proto files to flatbuffers
+convert:
+  # Directory containing .proto files to convert
+  proto_dir: "./proto"
+  
+  # Flatbuffers output configuration
+  flatbuffers:
+    # Directory where converted .fbs files will be saved
+    output_dir: "./generated/fbs"
+
+# Generate section - for generating code from flatbuffer files
+generate:
+  # Flatbuffers generation configuration
+  flatbuffers:
+    # Directory containing .fbs files to process
+    input_dir: "./generated/fbs"
+    
+    # Language-specific generation options
+    languages:
+      # C++ code generation
+      cpp:
+        output_dir: "./generated/cpp"
+        module_options: ""
+      
+      # Go code generation
+      go:
+        output_dir: "./generated/go"
+        module_options: "github.com/username/project/"
+      
+      # Java code generation
+      java:
+        output_dir: "./generated/java"
+        module_options: "com.fb"
+      
+      # Kotlin code generation
+      kotlin:
+        output_dir: "./generated/kotlin"
+        module_options: ""
+
+---
+
+# Minimal configuration example (convert only)
+# convert:
+#   proto_dir: "./proto"
+#   flatbuffers:
+#     output_dir: "./output"
+
+---
+
+# Minimal configuration example (generate only)
+# generate:
+#   flatbuffers:
+#     input_dir: "./fbs"
+#     languages:
+#       go:
+#         output_dir: "./src/go"
+#         module_options: "github.com/username/project/"
+
+---
+
+# Single language example
+# generate:
+#   flatbuffers:
+#     input_dir: "./schemas"
+#     languages:
+#       cpp:
+#         output_dir: "./build/generated/cpp"
+#         module_options: ""
+
+---
+
+# Multi-language example with different output directories
+# generate:
+#   flatbuffers:
+#     input_dir: "./schemas"
+#     languages:
+#       cpp:
+#         output_dir: "./cpp/generated"
+#         module_options: ""
+#       go:
+#         output_dir: "./go/pkg/generated"
+#         module_options: "github.com/myorg/myproject/"
+#       java:
+#         output_dir: "./java/src/main/generated"
+#         module_options: "com.fb"
