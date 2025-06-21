@@ -1,0 +1,9 @@
+// Generated from timestamp.proto
+
+namespace common;
+
+table Timestamp {
+  seconds:long;
+  nanos:int;
+}
+

@@ -17,7 +17,7 @@ var (
 )
 
 var flatbuffersCmd = &cobra.Command{
-	Use:   "flatbuffer",
+	Use:   "flatbuffers",
 	Short: "command used to generate language specific files from the fbs files",
 	Run: func(cmd *cobra.Command, args []string) {
 		lang, err := generator.StringToLanguage(language)

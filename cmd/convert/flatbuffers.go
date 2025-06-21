@@ -15,7 +15,7 @@ var (
 )
 
 var flatbuffersCmd = &cobra.Command{
-	Use:   "flatbuffer",
+	Use:   "flatbuffers",
 	Short: "command used to convert the proto files to fb files",
 	Run: func(cmd *cobra.Command, args []string) {
 		c, err := converter.NewConverter(converter.FLATBUFFER, protoDir, flatbufferDir, "")

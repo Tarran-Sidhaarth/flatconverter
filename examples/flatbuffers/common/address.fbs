@@ -1,0 +1,12 @@
+// Generated from address.proto
+
+namespace common;
+
+table Address {
+  street:string;
+  city:string;
+  state:string;
+  postal_code:string;
+  country:string;
+}
+
