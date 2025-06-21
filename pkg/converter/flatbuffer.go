@@ -31,7 +31,11 @@ type FlatConverter struct {
 // protoDir is the directory containing the input .proto files.
 // cleanedDir is the directory where cleaned proto files (without google API imports) will be written.
 // targetDir is the output directory for generated FlatBuffers schemas.
-func NewFlatConverter(protoDir, cleanedDir, targetDir, prefix string) *FlatConverter {
+func newFlatConverter(protoDir, targetDir, prefix string) (*FlatConverter, error) {
+	tempDir, err := os.MkdirTemp("", "cleaned")
+	if err != nil {
+		return nil, err
+	}
 	return &FlatConverter{
 		compiler: &protocompile.Compiler{
 			Resolver: &protocompile.SourceResolver{
@@ -40,10 +44,10 @@ func NewFlatConverter(protoDir, cleanedDir, targetDir, prefix string) *FlatConve
 			Reporter: reporter.NewReporter(nil, nil),
 		},
 		protoDir:      protoDir,
-		cleanedDir:    cleanedDir,
+		cleanedDir:    tempDir,
 		flatbufferDir: targetDir,
 		prefix:        prefix,
-	}
+	}, nil
 }
 
 // Convert performs the full conversion process from proto files to FlatBuffers schemas.
@@ -53,7 +57,7 @@ func NewFlatConverter(protoDir, cleanedDir, targetDir, prefix string) *FlatConve
 // are deleted after conversion.
 //
 // Returns an error if any step of the process fails.
-func (c *FlatConverter) Convert(ctx context.Context, keepCleaned bool) error {
+func (c *FlatConverter) Convert(ctx context.Context) error {
 	if err := c.removeGoogleAPI(ctx); err != nil {
 		return fmt.Errorf("could not remove google api from protos %v", err)
 	}
@@ -95,11 +99,7 @@ func (c *FlatConverter) Convert(ctx context.Context, keepCleaned bool) error {
 		return fmt.Errorf("conversion completed with %d errors", errorCount)
 	}
 
-	if !keepCleaned {
-		os.RemoveAll(c.cleanedDir)
-	}
-
-	return nil
+	return os.RemoveAll(c.cleanedDir)
 }
 
 // removeGoogleAPI removes google API imports from proto files and writes cleaned files to the cleanedDir.

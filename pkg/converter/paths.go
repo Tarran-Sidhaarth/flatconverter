@@ -59,7 +59,6 @@ func generateFiles(fileDetails map[string][]byte) error {
 		if err := os.WriteFile(path, content, 0o644); err != nil {
 			return fmt.Errorf("failed to write file %s: %v", path, err)
 		}
-		fmt.Printf("Created: %s\n", path)
 	}
 	return nil
 }

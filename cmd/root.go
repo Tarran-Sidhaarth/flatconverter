@@ -3,13 +3,14 @@ package cmd
 import (
 	"os"
 
-	"github.com/machanirobotics/flatconverter/cmd/flat"
+	"github.com/machanirobotics/buffman/cmd/convert"
+	"github.com/machanirobotics/buffman/cmd/generate"
 	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "protox",
-	Short: "Protox - a simple cli tool to convert proto files to flatbuffers",
+	Use:   "buffman",
+	Short: "Buffman - a simple cli tool to convert proto files to flatbuffers",
 }
 
 func Execute() {
@@ -20,5 +21,5 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.AddCommand(flat.FlatCmd)
+	rootCmd.AddCommand(convert.ConvertCmd, generate.GenerateCmd)
 }

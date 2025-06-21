@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/machanirobotics/flatconverter/cmd"
+	"github.com/machanirobotics/buffman/cmd"
 )
 
 func main() {

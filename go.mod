@@ -1,4 +1,4 @@
-module github.com/machanirobotics/flatconverter
+module github.com/machanirobotics/buffman
 
 go 1.24.1
 

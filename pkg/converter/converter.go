@@ -26,7 +26,7 @@ type Converter interface {
 	// ctx: Context for cancellation and deadlines.
 	// keepCleaned: If true, retains intermediate cleaned files.
 	// Returns an error if the conversion fails.
-	Convert(ctx context.Context, keepCleaned bool) error
+	Convert(ctx context.Context) error
 }
 
 // NewConverter returns a Converter implementation based on the provided ConverterType.
@@ -38,14 +38,13 @@ type Converter interface {
 //
 // Returns a Converter and nil error on success.
 // Returns a non-nil error if the converterType is invalid.
-func NewConverter(converterType ConverterType, protoDir, cleanedDir, targetDir, prefix string) (Converter, error) {
+func NewConverter(converterType ConverterType, protoDir, targetDir, prefix string) (Converter, error) {
 	if !strings.HasSuffix(prefix, "/") && prefix != "" {
 		prefix += "/"
 	}
 	switch converterType {
 	case FLATBUFFER:
-		converter := NewFlatConverter(protoDir, cleanedDir, targetDir, prefix)
-		return converter, nil
+		return newFlatConverter(protoDir, targetDir, prefix)
 	default:
 		return nil, fmt.Errorf("invalid converter type")
 	}
