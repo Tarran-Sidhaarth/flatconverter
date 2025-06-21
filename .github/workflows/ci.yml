@@ -90,7 +90,7 @@ jobs:
         fi
         
         # Set the output filename
-        OUTPUT_NAME="protox-${GOOS}-${ARCH_NAME}"
+        OUTPUT_NAME="buffman-${GOOS}-${ARCH_NAME}"
         
         # Get version from git tag or commit
         VERSION=${{ github.ref_name }}
