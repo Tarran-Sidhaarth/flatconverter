@@ -1,3 +1,18 @@
 package internal
 
-const Version = "v0.0.1"
+import (
+	"os/exec"
+	"regexp"
+)
+
+const Version = "0.0.1"
+
+func GetFlatCVersion() string {
+	cmd := exec.Command("bash", "-c", "flatc --version")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "unknown"
+	}
+	re := regexp.MustCompile(`\d+\.\d+\.\d+`)
+	return re.FindString(string(output))
+}

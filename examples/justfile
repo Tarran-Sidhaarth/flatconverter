@@ -9,7 +9,7 @@ CPP_DIR:= "../examples/cpp"
 PROTO_DIR := "../examples/protos"
 
 build:
-    go build -o buffman main.go
+    go build -o ../buffman ../main.go
 
 convert:
     ../buffman convert flatbuffers -I "{{PROTO_DIR}}" -o "{{FLATBUFFER_DIR}}"
@@ -28,5 +28,21 @@ generate-kotlin:
 
 generate: generate-go generate-java generate-cpp generate-kotlin
 
-rm:
+rm-flatbuffers:
     rm -rf flatbuffers
+
+rm-go:
+    find go/ -mindepth 1 ! -name 'go.mod' ! -name 'go.sum' -delete
+
+rm-java:
+    rm -rf java/*
+
+rm-kotlin:
+    rm -rf kotlin/*
+
+rm-cpp:
+    rm -rf cpp/*
+
+rm: rm-flatbuffers rm-go rm-java rm-kotlin rm-cpp
+
+run: build rm convert generate

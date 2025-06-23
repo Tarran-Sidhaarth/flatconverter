@@ -84,9 +84,9 @@ jobs:
         # Map architecture names
         ARCH_NAME="${GOARCH}"
         if [ "$GOARCH" = "amd64" ]; then
-          ARCH_NAME="amd"
+          ARCH_NAME="amd64"
         elif [ "$GOARCH" = "arm64" ]; then
-          ARCH_NAME="arm"
+          ARCH_NAME="arm64"
         fi
         
         # Set the output filename

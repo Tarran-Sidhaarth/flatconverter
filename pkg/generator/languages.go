@@ -42,7 +42,7 @@ func StringToLanguage(language string) (Languages, error) {
 // The packagePrefix parameter is ignored as it is not used by the C++ generator.
 func (f *FlatGenerator) generateCppFilesFromFbs(_ string) error {
 	cmdStr := fmt.Sprintf(flatcCommand, f.includePaths, "--cpp", f.targetDir, "", path.Join(f.flatbufferDir, "**/*.fbs"))
-	return executeCommand(cmdStr)
+	return f.createLanguageFiles(cmdStr, "C++", ".h")
 }
 
 // generateGoFilesFromFbs is a helper method that generates Go source files
@@ -54,7 +54,7 @@ func (f *FlatGenerator) generateGoFilesFromFbs(packagePrefix string) error {
 		goOpts = fmt.Sprintf("--go-module-name %s", packagePrefix)
 	}
 	cmdStr := fmt.Sprintf(flatcCommand, f.includePaths, "--go", f.targetDir, goOpts, path.Join(f.flatbufferDir, "**/*.fbs"))
-	return executeCommand(cmdStr)
+	return f.createLanguageFiles(cmdStr, "Go", ".go")
 }
 
 // generateJavaFilesFromFbs is a helper method that generates Java source files
@@ -66,7 +66,7 @@ func (f *FlatGenerator) generateJavaFilesFromFbs(packagePrefix string) error {
 		javaOpts = fmt.Sprintf("--java-package-prefix %s", packagePrefix)
 	}
 	cmdStr := fmt.Sprintf(flatcCommand, f.includePaths, "--java", f.targetDir, javaOpts, path.Join(f.flatbufferDir, "**/*.fbs"))
-	return executeCommand(cmdStr)
+	return f.createLanguageFiles(cmdStr, "Java", ".java")
 }
 
 // generateKotlinFilesFromFbs is a helper method that generates Kotlin source files
@@ -74,7 +74,7 @@ func (f *FlatGenerator) generateJavaFilesFromFbs(packagePrefix string) error {
 // The packagePrefix parameter is currently unused for Kotlin generation.
 func (f *FlatGenerator) generateKotlinFilesFromFbs(packagePrefix string) error {
 	cmdStr := fmt.Sprintf(flatcCommand, f.includePaths, "--kotlin", f.targetDir, "", path.Join(f.flatbufferDir, "**/*.fbs"))
-	return executeCommand(cmdStr)
+	return f.createLanguageFiles(cmdStr, "Kotlin", ".kt")
 }
 
 // getIncludePaths walks the entire directory tree starting from the generator's
@@ -99,4 +99,20 @@ func (f *FlatGenerator) getIncludePaths() ([]string, error) {
 		return nil, fmt.Errorf("failed to walk include directories: %w", err)
 	}
 	return paths, nil
+}
+
+func (f *FlatGenerator) createLanguageFiles(cmdStr string, language, extension string) error {
+	if err := executeCommand(cmdStr); err != nil {
+		return err
+	}
+	langFiles, err := listLanguageFiles(f.targetDir, extension)
+	if err != nil {
+		return err
+	}
+	for _, file := range langFiles {
+		if err := f.insertGeneratedComments(language, path.Join(f.targetDir, file)); err != nil {
+			return err
+		}
+	}
+	return nil
 }
