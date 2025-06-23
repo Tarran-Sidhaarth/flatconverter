@@ -1,0 +1,32 @@
+set export:
+FLATBUFFER_DIR := "../examples/flatbuffers"
+GO_DIR := "../examples/go/fb"
+GO_MODULE := "example.com/buffman/fb"
+JAVA_DIR := "../examples/java"
+JAVA_PACKAGE_PREFIX := "com.fb"
+KOTLIN_DIR := "../examples/kotlin"
+CPP_DIR:= "../examples/cpp"
+PROTO_DIR := "../examples/protos"
+
+build:
+    go build -o buffman main.go
+
+convert:
+    ../buffman convert flatbuffers -I "{{PROTO_DIR}}" -o "{{FLATBUFFER_DIR}}"
+
+generate-go:
+    ../buffman generate flatbuffers -I "{{FLATBUFFER_DIR}}" -o {{GO_DIR}} -l go -m "{{GO_MODULE}}"
+
+generate-java:
+    ../buffman generate flatbuffers -I "{{FLATBUFFER_DIR}}" -o {{JAVA_DIR}} -l java -m "{{JAVA_PACKAGE_PREFIX}}"
+
+generate-cpp:
+    ../buffman generate flatbuffers -I "{{FLATBUFFER_DIR}}" -o {{CPP_DIR}} -l cpp 
+
+generate-kotlin:
+    ../buffman generate flatbuffers -I "{{FLATBUFFER_DIR}}" -o {{KOTLIN_DIR}} -l kotlin
+
+generate: generate-go generate-java generate-cpp generate-kotlin
+
+rm:
+    rm -rf flatbuffers
