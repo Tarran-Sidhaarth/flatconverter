@@ -5,7 +5,7 @@ import (
 	"regexp"
 )
 
-const Version = "0.0.1"
+const Version = "1.0.0"
 
 func GetFlatCVersion() string {
 	cmd := exec.Command("bash", "-c", "flatc --version")
