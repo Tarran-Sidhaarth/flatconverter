@@ -119,6 +119,11 @@ jobs:
           OUTPUT_NAME="${OUTPUT_NAME}.exe"
         fi
         
+        # Set CGO_ENABLED=0 for Linux builds
+        if [ "$GOOS" = "linux" ]; then
+          export CGO_ENABLED=0
+        fi
+        
         # Build the binary with embedded version
         go build -ldflags="-s -w -X main.version=${VERSION} -X main.commit=$(git rev-parse HEAD) -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" -o "dist/${OUTPUT_NAME}" .
     
