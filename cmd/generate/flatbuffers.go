@@ -39,19 +39,20 @@ Example:
     --language=go \
     --module_options="github.com/your-org/your-project/gen/go"`,
 	Run: func(cmd *cobra.Command, args []string) {
-		lang, err := generator.StringToLanguage(language)
+
+		lang := generator.NewLanguage(language)
+		if lang.Language == generator.UNKNOWN {
+			fmt.Println("unsupported language")
+			os.Exit(1)
+		}
+
+		g, err := generator.NewGenerator(generator.FLATBUFFER, flatbuffersDir, targetDir, map[generator.Languages]string{lang.Language: moduleOptions})
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		g, err := generator.NewGenerator(generator.FLATBUFFER, flatbuffersDir, targetDir, map[generator.Languages]string{lang: moduleOptions})
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-
-		if err := g.Generate(context.Background(), []generator.Languages{lang}); err != nil {
+		if err := g.Generate(context.Background(), []generator.Languages{lang.Language}); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}

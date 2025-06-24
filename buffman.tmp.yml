@@ -1,88 +1,85 @@
 # Configuration template for buffman
-# This file demonstrates all available configuration options
+version: v1
 
-# Convert section - for converting proto files to flatbuffers
-convert:
-  # Directory containing .proto files to convert
-  proto_dir: "./proto"
-  
-  # Flatbuffers output configuration
-  flatbuffers:
-    # Directory where converted .fbs files will be saved
-    output_dir: "./generated/fbs"
+# Single input directory containing schema files
+input:
+  directory: "./proto"
 
-# Generate section - for generating code from flatbuffer files
-generate:
-  # Flatbuffers generation configuration
-  flatbuffers:
-    # Directory containing .fbs files to process
-    input_dir: "./generated/fbs"
-    
-    # Language-specific generation options
+# Plugins configuration
+plugins:
+  - name: flatbuffers
+    out: "./generated/fbs"  # Directory where .fbs files converted from .proto will be saved
     languages:
-      # C++ code generation
-      cpp:
-        output_dir: "./generated/cpp"
-        module_options: ""
-      
-      # Go code generation
-      go:
-        output_dir: "./generated/go"
-        module_options: "github.com/username/project/"
-      
-      # Java code generation
-      java:
-        output_dir: "./generated/java"
-        module_options: "com.fb"
-      
-      # Kotlin code generation
-      kotlin:
-        output_dir: "./generated/kotlin"
-        module_options: ""
+      - language: cpp
+        out: "./generated/cpp"
+        opt: ""
+      - language: go
+        out: "./generated/go"
+        opt: "github.com/username/project/fb"
+      - language: java
+        out: "./generated/java"
+        opt: "com.fb"
+      - language: kotlin
+        out: "./generated/kotlin"
+        opt: ""
+      - language: php
+        out: "./generated/php"
+        opt: ""
+      - language: swift
+        out: "./generated/swift"
+        opt: ""
+      - language: dart
+        out: "./generated/dart"
+        opt: ""
+      - language: csharp
+        out: "./generated/csharp"
+        opt: ""
+      - language: python
+        out: "./generated/python"
+        opt: ""
+      - language: rust
+        out: "./generated/rust"
+        opt: ""
+      - language: ts
+        out: "./generated/ts"
+        opt: ""
 
 ---
 
-# Minimal configuration example (convert only)
-# convert:
-#   proto_dir: "./proto"
-#   flatbuffers:
-#     output_dir: "./output"
-
----
-
-# Minimal configuration example (generate only)
-# generate:
-#   flatbuffers:
-#     input_dir: "./fbs"
+# Minimal example
+# version: v1
+# input:
+#   directory: "./proto"
+# plugins:
+#   - name: flatbuffers
+#     out: "./fbs"
 #     languages:
-#       go:
-#         output_dir: "./src/go"
-#         module_options: "github.com/username/project/"
+#       - language: go
+#         out: "./generated/go"
+#         opt: "github.com/username/project/fb"
 
 ---
 
-# Single language example
-# generate:
-#   flatbuffers:
-#     input_dir: "./schemas"
+# Multi-language production example
+# version: v1
+# input:
+#   directory: "./schemas"
+# plugins:
+#   - name: flatbuffers
+#     out: "./build/fbs"
 #     languages:
-#       cpp:
-#         output_dir: "./build/generated/cpp"
-#         module_options: ""
-
----
-
-# Multi-language example with different output directories
-# generate:
-#   flatbuffers:
-#     input_dir: "./schemas"
-#     languages:
-#       cpp:
-#         output_dir: "./cpp/generated"
-#         module_options: ""
-#       go:
-#         output_dir: "./go/pkg/generated"
-#         module_options: "github.com/myorg/myproject/"
-#       java:
-#         output_dir: "./java/src/main/generated"
-#         module_options: "com.fb"
+#       - language: go
+#         out: "./services/go/generated"
+#         opt: "github.com/company/project/fb"
+#       - language: cpp
+#         out: "./native/cpp/generated"
+#         opt: ""
+#       - language: java
+#         out: "./services/java/generated"
+#         opt: "com.company.project.fb"
+#       - language: ts
+#         out: "./web/src/generated"
+#         opt: ""
+#       - language: python
+#         out: "./analytics/generated"
+#         opt: ""

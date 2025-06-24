@@ -85,7 +85,7 @@ func (c *FlatConverter) Convert(ctx context.Context) error {
 			fmt.Printf("✗ Failed to convert %s: %v\n", protoFile, err)
 			errorCount++
 		} else {
-			if err := c.insertGeneratedComments(path.Join(c.flatbufferDir, strings.Replace(protoFile, ".proto", ".fbs", -1)), protoFile); err != nil {
+			if err := c.insertGeneratedComments(path.Join(c.flatbufferDir, strings.Replace(protoFile, ".proto", ".fbs", -1))); err != nil {
 				fmt.Printf("✗ Failed to add generated comment: %v", err)
 				errorCount++
 			} else {
@@ -148,7 +148,6 @@ func (c *FlatConverter) convertProtoFile(ctx context.Context, protoFile string) 
 	}
 	cmd := exec.CommandContext(ctx, "flatc",
 		"--proto",
-		"--oneof-union",
 		"-I", c.cleanedDir,
 		"-o", targetDir,
 		path.Join(c.cleanedDir, protoFile),

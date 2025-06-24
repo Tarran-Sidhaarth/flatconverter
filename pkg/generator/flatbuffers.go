@@ -67,6 +67,24 @@ func (f *FlatGenerator) Generate(ctx context.Context, languages []Languages) err
 			err = f.generateJavaFilesFromFbs(f.packagePrefix[language])
 		case KOTLIN:
 			err = f.generateKotlinFilesFromFbs(f.packagePrefix[language])
+		case LUA:
+			err = f.generateLuaFilesFromFbs(f.packagePrefix[language])
+		case PHP:
+			err = f.generatePhpFilesFromFbs(f.packagePrefix[language])
+		case SWIFT:
+			err = f.generateSwiftFilesFromFbs(f.packagePrefix[language])
+		case DART:
+			err = f.generateDartFilesFromFbs(f.packagePrefix[language])
+		case CSHARP:
+			err = f.generateCsharpFilesFromFbs(f.packagePrefix[language])
+		case PYTHON:
+			err = f.generatePythonFilesFromFbs(f.packagePrefix[language])
+		case RUST:
+			err = f.generateRustFilesFromFbs(f.packagePrefix[language])
+		case TS:
+			err = f.generateTsFilesFromFbs(f.packagePrefix[language])
+		case NIM:
+			err = f.generateNimFilesFromFbs(f.packagePrefix[language])
 		default:
 			err = fmt.Errorf("unsupported language for generation: %v", language)
 		}
