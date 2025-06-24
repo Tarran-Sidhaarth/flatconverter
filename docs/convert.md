@@ -2,80 +2,85 @@
 
 # Buffman Convert 🤖✨
 
-Welcome to the `convert` command's headquarters! This is your go-to tool for transforming schema files from one format to another. Right now, its superpower is turning Protocol Buffers (`.proto`) into FlatBuffers (`.fbs`).
+Welcome to the `convert` command. This is your tool for transforming `.proto` schema files into `.fbs` using the power of FlatBuffers. You can run conversions directly through the CLI or automate them using your `buffman.yml`.
 
 ---
 
-## 🧠 The `convert flatbuffers` Command
+## 🔧 Quick Command Reference
 
-At its core, `convert` has one super-useful subcommand: `flatbuffers`.
-
-```bash
-buffman convert flatbuffers [FLAGS]
-```
-
-This command reads all the `.proto` files from a source directory and spits out shiny new `.fbs` files in an output directory.
+| Command                                                                     | Description                                           |
+| --------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `buffman convert flatbuffers`                                               | Converts `.proto` files to `.fbs` using `buffman.yml` |
+| `buffman convert flatbuffers -I ./my-protos -o ./my-fbs` | Converts using direct CLI flags                       |
 
 ---
 
-## 🚀 Usage Examples
-
-You can run conversions in two ways: directly from the command line or using your `buffman.yml` for automated runs.
-
-### 1. 🖥️ Command-Line Interface (CLI)
-
-Perfect for quick conversions without touching your config file.
-
-**Example:** Convert protos in `my-protos/` to fbs files in `my-fbs/`
+## 🧠 Full Command
 
 ```bash
 buffman convert flatbuffers --proto_dir ./my-protos --output_dir ./my-fbs
 ```
 
----
+Or using short flags:
 
-### 2. ⚙️ Using `buffman.yml`
-
-This is the recommended way to manage your project's workflow. Define your conversion path in `buffman.yml`, and then just run the main `buffman` command.
-
-**Example `buffman.yml`:**
-
-```yaml
-convert:
-  proto_dir: ./my-protos
-  flatbuffers:
-    output_dir: ./my-fbs
+```bash
+buffman convert flatbuffers -I ./my-protos -o ./my-fbs
 ```
 
-Then, simply run:
+This reads all `.proto` files from the specified input directory and writes the converted `.fbs` files to the specified output directory.
+If `--output_dir` is not provided, Buffman defaults to the current working directory.
+
+---
+
+## 🚀 Usage Modes
+
+You can run the convert command in two ways — CLI flags or using a configuration file.
+
+### CLI Mode
+
+Use this for quick conversions when you do not want to set up a config file.
+
+```bash
+buffman convert flatbuffers --proto_dir ./my-protos --output_dir ./my-fbs
+```
+
+### Config Mode (Recommended)
+
+To use `buffman.yml`, define the input directory and plugin configuration like this:
+
+```
+version: v1
+input:
+  directory: "./schemas"
+plugins:
+  - name: flatbuffers
+    out: "./build/fbs"
+    languages:
+      - language: go
+        out: "./generated/go"
+        opt: "github.com/example/project/fb"
+```
+
+Then run:
 
 ```bash
 buffman
 ```
 
-Voila! Buffman reads your config and handles the rest.
+Buffman will use `buffman.yml` from the current directory. To use a custom config path:
+
+```bash
+buffman -f ./path/to/config.yml
+```
 
 ---
 
 ## 🚩 Flags
 
-Here are the flags you can use with `buffman convert flatbuffers`:
-
-| Flag             | Shorthand | Description                                             | Required? |
-|------------------|-----------|---------------------------------------------------------|-----------|
-| `--proto_dir`    | `-I`      | The directory where your source `.proto` files live.    | ✅ Yes     |
-| `--output_dir`   | `-o`      | The directory where the generated `.fbs` files will go. | ❌ No      |
-
----
-
-## 🛠️ Configuration Keys
-
-You can set up conversion paths using the following keys inside your `buffman.yml`:
-
-| Key                              | Type   | Description                                                   |
-|----------------------------------|--------|---------------------------------------------------------------|
-| `convert.proto_dir`              | string | **Required.** The path to your directory of `.proto` files.   |
-| `convert.flatbuffers.output_dir` | string | Output directory for `.fbs` files. Defaults to `./`.          |
+| Flag           | Shorthand | Description                                                                     | Required |
+| -------------- | --------- | ------------------------------------------------------------------------------- | -------- |
+| `--proto_dir`  | `-I`      | The directory containing `.proto` files                                         | Yes      |
+| `--output_dir` | `-o`      | The directory where `.fbs` files will be written. Defaults to current directory | No       |
 
 ---
 

@@ -2,96 +2,81 @@
 
 # Buffman Generate 🚀🔥
 
-Ready to turn your schemas into actual, usable code? The `generate` command is here to do the heavy lifting! It takes your schema files (like `.fbs`) and generates language-specific source code so you can start building.
+The `generate` command turns your FlatBuffer schemas (`.fbs`) into language-specific source code using the `flatc` compiler. Run it directly from the CLI for one-off jobs or configure every language you need in `buffman.yml` and let Buffman handle the rest.
 
----
+## 🔧 Quick Command Reference
 
-## 🛠️ The `generate flatbuffers` Command
+| Command                                                                                                                                   | Description                                    |
+| ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `buffman`                                                                                                            | Generates code using settings in `buffman.yml` |
+| `buffman generate flatbuffers --I ./my-fbs --language go -o ./gen/go --module_options "github.com/me/project/fb"` | Generates code through CLI flags               |
 
-This is where the magic happens! The `generate flatbuffers` subcommand invokes the `flatc` compiler to create source files from your FlatBuffer schemas.
-
-```bash
-buffman generate flatbuffers [FLAGS]
-```
-
----
-
-## 🚀 Usage Examples
-
-You can generate code for a single language via the CLI or—even better—configure a multi-language generation pipeline in your `buffman.yml`.
-
-### 1. 🖥️ Command-Line Interface (CLI)
-
-Great for generating code for one language on the fly.
-
-**Example:** Generate Go code from `.fbs` files in `my-fbs/`
+## 🧠 Full Command
 
 ```bash
-buffman generate flatbuffers \
-  --flatbuffers_dir=./my-fbs \
-  --language=go \
-  --target_dir=./gen/go \
-  --module_options="github.com/your-org/your-project/gen/go"
+buffman generate flatbuffers -I ./my-fbs --language go -o ./gen/go --module_options "github.com/me/project/fb"
+```
+If `-o` is omitted Buffman writes generated code to the current working directory.
+
+## 🚀 Usage Modes
+
+### CLI Mode
+
+Best for quick, single-language generation.
+
+```bash
+buffman generate flatbuffers --flatbuffers_dir ./my-fbs --language cpp --target_dir ./gen/cpp
 ```
 
----
+### Config Mode (Recommended)
 
-### 2. ⚙️ Using `buffman.yml` (The Power-User Way 💪)
+Define every language once and generate them all with one command.
 
-This is where Buffman truly shines. Define all your target languages in `buffman.yml`, and Buffman will generate them all with a single command.
-
-**Example `buffman.yml`:**
-
-```yaml
-generate:
-  flatbuffers:
-    input_dir: ./my-fbs
+```
+version: v1
+input:
+  directory: "./schemas"           # Where your .proto files live
+plugins:
+  - name: flatbuffers
+    out: "./build/fbs"             # Where the .fbs files were written by convert
     languages:
-      go:
-        output_dir: ./gen/go
-        module_options: "github.com/your-org/your-project/gen/go"
-      cpp:
-        output_dir: ./gen/cpp
-      java:
-        output_dir: ./gen/java
-        module_options: "com.your-org.your-project"
+      - language: go
+        out: "./services/go/generated"
+        opt: "github.com/company/project/fb"
+      - language: cpp
+        out: "./native/cpp/generated"
+        opt: ""
+      - language: java
+        out: "./services/java/generated"
+        opt: "com.company.project.fb"
+      - language: ts
+        out: "./web/src/generated"
+        opt: ""
+      - language: python
+        out: "./analytics/generated"
+        opt: ""
 ```
 
-Then just run:
+Run everything with:
 
 ```bash
 buffman
 ```
 
-Buffman will read your config and create the Go, C++, and Java files in their respective output directories. How cool is that?
+To use a different configuration file:
 
----
+```bash
+buffman -f ./path/to/config.yml
+```
 
 ## 🚩 Flags
 
-Here are the flags available for `buffman generate flatbuffers`:
-
-| Flag                | Shorthand | Description                                                                 | Required? |
-|---------------------|-----------|-----------------------------------------------------------------------------|-----------|
-| `--flatbuffers_dir` | `-I`      | The directory where your source `.fbs` schema files are.                    | ✅ Yes     |
-| `--language`        | `-l`      | The target language to generate (e.g., `go`, `java`, `cpp`, `kotlin`).      | ✅ Yes     |
-| `--target_dir`      | `-o`      | The output directory for the generated code.                                | ❌ No      |
-| `--module_options`  | `-m`      | Language-specific options, like a Go module path or Java package prefix.    | ❌ No      |
-
----
-
-## 🧩 Configuration Keys
-
-Here are the keys you can use in the `generate` section of your `buffman.yml`:
-
-| Key                                         | Type   | Description                                                                                           |
-|---------------------------------------------|--------|-------------------------------------------------------------------------------------------------------|
-| `generate.flatbuffers.input_dir`            | string | **Required.** The path to your source `.fbs` files.                                                   |
-| `generate.flatbuffers.languages`            | object | A container for all target language configurations.                                                   |
-| `...languages.<lang>.output_dir`            | string | **Required.** The output directory for this specific language (e.g., `languages.go.output_dir`).      |
-| `...languages.<lang>.module_options`        | string | Optional. Language-specific options like a Go package path or Java package name for that language.    |
-
----
+| Flag                | Shorthand | Description                                                             | Required |
+| ------------------- | --------- | ----------------------------------------------------------------------- | -------- |
+| `--flatbuffers_dir` | `-I`      | Directory containing source `.fbs` files                                | Yes      |
+| `--language`        | `-l`      | Target language to generate (`go`, `cpp`, `java`, `kotlin`, etc.)       | Yes      |
+| `--target_dir`      | `-o`      | Directory to write generated code. Defaults to current directory        | No       |
+| `--module_options`  | `-m`      | Language-specific options such as Go module path or Java package prefix | No       |
 
 Happy generating! 💻
 

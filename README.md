@@ -1,82 +1,182 @@
 # Buffman
 
 <p align="center">
-  <img src="docs/buffman.png" alt="Buffman Logo" width="200" />
+  <img src="docs/buffman.png" alt="Buffman Logo" width="400" />
 </p>
 
-> [!WARNING]
-> **Heads up! Buffman is evolving fast 🚀**  
-> This project is under active development. APIs, configurations, and features are still being polished and may change without notice. Use with caution in production environments and stay tuned for updates!
+> \[!WARNING]
+> **Buffman is evolving fast 🚀**
+> This project is under active development. APIs, configurations, and features may change without notice. Use with caution in production environments.
+>
+> **Buffman** is your friendly neighborhood CLI tool that wraps around the mighty `flatc` compiler. It simplifies converting `.proto` files to `.fbs`, and generates code in multiple languages using a declarative YAML config (`buffman.yml`).
 
----
+## Installation
 
-## Table of Contents
+You can install Buffman in two ways:
 
-- [What is Buffman?](#what-is-buffman)
-- [Getting Started](#getting-started)
-- [Buffman Commands](#buffman-commands)
-  - [buffman (root command)](#buffman-root-command)
-  - [convert](#convert)
-  - [generate](#generate)
-- [Configuration](#configuration)
-- [Contributing](#contributing)
-- [License](#license)
+1. **Download Precompiled Binary**
+   Visit the [Releases page](https://github.com/your-org/buffman/releases) and download the binary for your OS.
 
----
+2. **Build from Source**
 
-## What is Buffman?
+   ```bash
+   git clone https://github.com/your-org/buffman.git
+   cd buffman
+   go build -o buffman main.go
+   ```
 
-Buffman is your friendly neighborhood CLI tool that wraps around the mighty `flatc` compiler. It makes converting Protocol Buffer (`.proto`) files into FlatBuffers (`.fbs`) a breeze — no more wrestling with complicated commands! Plus, with a powerful YAML config (`buffman.yml`), you can automate conversions and code generation effortlessly.
+**Note:** Add the binary to your `PATH` for convenient use from anywhere.
 
-And guess what? We’re just getting started! Soon, Buffman will support more buffer formats like Nanobuffers and beyond. Stay tuned!
+## Quickstart
 
----
+Make sure a file named `buffman.yml` is present in your current directory. Here's a minimal example:
 
-## Getting Started
+```
+version: v1
+input:
+  directory: "./protos"
+plugins:
+  - name: flatbuffers
+    out: "./fbs"
+    languages:
+      - language: go
+        out: "./generated/go"
+        opt: "github.com/username/project/fb"
+```
 
-Install Buffman, create your `buffman.yml` config, and you're ready to roll. Whether you want to convert proto files or generate language-specific code, Buffman’s got your back.
+Then run:
 
----
+```bash
+buffman
+```
 
-## Buffman Commands
+Buffman will automatically detect `buffman.yml` in the current directory. To use a custom path, use the `-f` flag:
 
-### buffman (root command)
+```bash
+buffman -f ./path/to/config.yml
+```
 
-The heart of Buffman! Run this command with your config file (default: `buffman.yml`) and it will execute all the conversions and generations you’ve defined. No need to run multiple commands manually — just one command to rule them all!
+## Commands
 
-
-### convert
-
-Want to transform your `.proto` files into `.fbs`? The `convert` command is your go-to. It supports converting proto files to FlatBuffers schemas with ease.
-
-For a deep dive into usage, flags, and examples, check out the detailed guide:  
-[docs/convert.md](docs/convert.md)
-
-### generate
-
-Ready to turn your `.fbs` schemas into language-specific source files? The `generate` command lets you generate code in Go, C++, Java, Kotlin, and more — all configurable via your YAML file.
-
-Explore all the nitty-gritty details here:  
-[docs/generate.md](docs/generate.md)
-
----
+| Command    | Description                                                                                                                      |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `buffman`  | The root command. Executes conversion and generation as defined in `buffman.yml`. Use `-f` to specify a custom config file path. |
+| `convert`  | Converts `.proto` files to `.fbs` files using your `buffman.yml` settings. [Learn more](docs/convert.md)                         |
+| `generate` | Generates code in multiple languages from `.fbs` files as defined in `buffman.yml`. [Learn more](docs/generate.md)               |
 
 ## Configuration
 
-Buffman uses a YAML configuration file (`buffman.yml`) to define your conversion and generation workflows. This makes it easy to automate complex pipelines without breaking a sweat.
+Buffman uses a YAML configuration file named `buffman.yml` to define your input directories, output locations, plugins, and language targets. Here’s the complete structure:
 
----
+```
+version: v1
+
+input:
+  directory: "./proto"
+
+plugins:
+  - name: flatbuffers
+    out: "./generated/fbs"  # Directory where .fbs files converted from .proto will be saved
+    languages:
+      - language: cpp
+        out: "./generated/cpp"
+        opt: ""
+      - language: go
+        out: "./generated/go"
+        opt: "github.com/username/project/fb"
+      - language: java
+        out: "./generated/java"
+        opt: "com.fb"
+      - language: kotlin
+        out: "./generated/kotlin"
+        opt: ""
+      - language: php
+        out: "./generated/php"
+        opt: ""
+      - language: swift
+        out: "./generated/swift"
+        opt: ""
+      - language: dart
+        out: "./generated/dart"
+        opt: ""
+      - language: csharp
+        out: "./generated/csharp"
+        opt: ""
+      - language: python
+        out: "./generated/python"
+        opt: ""
+      - language: rust
+        out: "./generated/rust"
+        opt: ""
+      - language: ts
+        out: "./generated/ts"
+        opt: ""
+```
+
+## Supported Languages
+
+The following languages are currently supported for code generation via FlatBuffers:
+
+* `cpp`
+* `go`
+* `java`
+* `kotlin`
+* `php`
+* `swift`
+* `dart`
+* `csharp`
+* `python`
+* `rust`
+* `ts`
+
+## Examples
+
+### Minimal example
+
+```
+version: v1
+input:
+  directory: "./proto"
+plugins:
+  - name: flatbuffers
+    out: "./fbs"
+    languages:
+      - language: go
+        out: "./generated/go"
+        opt: "github.com/username/project/fb"
+```
+
+### Multi-language production example
+
+```
+version: v1
+input:
+  directory: "./schemas"
+plugins:
+  - name: flatbuffers
+    out: "./build/fbs"
+    languages:
+      - language: go
+        out: "./services/go/generated"
+        opt: "github.com/company/project/fb"
+      - language: cpp
+        out: "./native/cpp/generated"
+        opt: ""
+      - language: java
+        out: "./services/java/generated"
+        opt: "com.company.project.fb"
+      - language: ts
+        out: "./web/src/generated"
+        opt: ""
+      - language: python
+        out: "./analytics/generated"
+        opt: ""
+```
 
 ## Contributing
 
-We ❤️ contributions! Whether it’s bug reports, feature requests, or code improvements, your help makes Buffman better. Check out [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
----
+We ❤️ contributions! Whether it's fixing bugs, adding features, or improving docs — your help is welcome. Please see [`CONTRIBUTING.md`](CONTRIBUTING.md) before you start.
 
 ## License
 
-Buffman is open source under the MIT License. See [LICENSE](LICENSE) for details.
-
----
-
-Happy buffering! 🎉
+Buffman is open source under the MIT License. See [`LICENSE`](LICENSE) for full details.
