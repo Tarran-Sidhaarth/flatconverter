@@ -4,10 +4,22 @@
   <img src="docs/buffman.png" alt="Buffman Logo" width="400" />
 </p>
 
-> **_NOTE_**: **Buffman is evolving fast 🚀**
+**Buffman** is a CLI tool that wraps around the `flatc` compiler. It simplifies converting `.proto` files to `.fbs`, and generates code in multiple languages using a declarative YAML config (`buffman.yml`).
+
+> [!NOTE]
 > This project is under active development. APIs, configurations, and features may change without notice. Use with caution in production environments.
 
-**Buffman** is a CLI tool that wraps around the `flatc` compiler. It simplifies converting `.proto` files to `.fbs`, and generates code in multiple languages using a declarative YAML config (`buffman.yml`).
+- [Buffman](#buffman)
+   * [Installation](#installation)
+   * [Quickstart](#quickstart)
+   * [Commands](#commands)
+   * [Configuration](#configuration)
+   * [Supported Languages](#supported-languages)
+   * [Examples](#examples)
+      + [Minimal example](#minimal-example)
+      + [Multi-language production example](#multi-language-production-example)
+   * [License](#license)
+
 
 ## Installation
 
@@ -16,7 +28,8 @@ You can install Buffman in two ways:
 1. **Download Precompiled Binary**
    Visit the [Releases page](releases/) and download the binary for your OS.
     ```bash
-    curl -L https://github.com/machanirobotics/buffman/releases/download/v1.0.0/buffman-linux-x86-64-v1.0.0 -o buffman && \
+    export BUFFMAN_VERSION="1.0.0" && \
+    curl -L "https://github.com/machanirobotics/buffman/releases/download/v$BUFFMAN_VERSION/buffman-linux-x86-64-$BUFFMAN_VERSION" -o buffman && \
     sudo mv buffman /usr/local/bin/ && \
     sudo chmod +x /usr/local/bin/buffman
     ```
@@ -176,10 +189,6 @@ plugins:
         out: "./analytics/generated"
         opt: ""
 ```
-
-## Contributing
-
-We ❤️ contributions! Whether it's fixing bugs, adding features, or improving docs — your help is welcome. Please see [`CONTRIBUTING.md`](CONTRIBUTING.md) before you start.
 
 ## License
 

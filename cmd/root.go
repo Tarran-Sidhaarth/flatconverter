@@ -7,9 +7,11 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/machanirobotics/buffman/cmd/convert"
 	"github.com/machanirobotics/buffman/cmd/generate"
+	"github.com/machanirobotics/buffman/internal/install"
 	"github.com/machanirobotics/buffman/pkg/runner"
 	"github.com/spf13/cobra"
 )
@@ -50,10 +52,37 @@ func Execute() {
 }
 
 func init() {
-	// Add subcommands for 'convert' and 'generate' functionalities.
-	rootCmd.AddCommand(convert.ConvertCmd, generate.GenerateCmd)
+	// installing flatc if it is missing
+	installer := install.NewInstaller(install.FlatbuffersInstaller)
+	if !installer.Exists() {
+		fmt.Print("flatc is missing. Would you like to install it? (y/n): ")
 
+		var response string
+		_, err := fmt.Scanln(&response)
+		if err != nil {
+			fmt.Printf("Error reading input: %v\n", err)
+			os.Exit(1)
+		}
+
+		// Normalize the response to lowercase for comparison
+		response = strings.ToLower(strings.TrimSpace(response))
+
+		if response == "y" || response == "yes" {
+			fmt.Println("Installing flatc...")
+			if err := installer.Install(); err != nil {
+				fmt.Printf("Failed to install flatc please try installing manually: %v\n", err)
+				os.Exit(1)
+			}
+			fmt.Println("flatc installed successfully!")
+		} else {
+			fmt.Println("flatc is required for Buffman to work. Exiting...")
+			os.Exit(1)
+		}
+	}
 	// Define a persistent flag for the configuration file path.
 	// This flag is available to the root command and all its subcommands.
 	rootCmd.Flags().StringVarP(&configPath, "file", "f", "buffman.yml", "Path to the Buffman configuration file")
+
+	// Add subcommands for 'convert' and 'generate' functionalities.
+	rootCmd.AddCommand(convert.ConvertCmd, generate.GenerateCmd)
 }

@@ -15,7 +15,7 @@ import (
 
 // flatc specific variables (moved from previous example)
 var (
-	flatcVersion      = "1.12.0"
+	flatcVersion      = "25.2.10"
 	flatcDownloadArch = map[string]string{
 		"amd64": "x86_64",
 		"arm64": "aarch64",
@@ -27,6 +27,7 @@ var (
 	}
 	flatcDownloadURL = map[string]string{
 		"linux-amd64":   "https://github.com/google/flatbuffers/releases/download/v" + flatcVersion + "/flatc-linux-x86_64.zip",
+		"linux-x86_64":  "https://github.com/google/flatbuffers/releases/download/v" + flatcVersion + "/Linux.flatc.binary.g++-13.zip",
 		"linux-arm64":   "https://github.com/google/flatbuffers/releases/download/v" + flatcVersion + "/flatc-linux-aarch64.zip",
 		"macos-amd64":   "https://github.com/google/flatbuffers/releases/download/v" + flatcVersion + "/flatc-macos-x86_64.zip",
 		"macos-arm64":   "https://github.com/google/flatbuffers/releases/download/v" + flatcVersion + "/flatc-macos-aarch64.zip",

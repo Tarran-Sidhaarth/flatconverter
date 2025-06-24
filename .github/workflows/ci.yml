@@ -108,6 +108,9 @@ jobs:
         VERSION=${{ github.ref_name }}
         if [[ "$VERSION" == "main" ]] || [[ "$VERSION" == "develop" ]]; then
           VERSION=$(git rev-parse --short HEAD)
+        else
+          # Remove 'v' prefix if it exists
+          VERSION=${VERSION#v}
         fi
         
         # Set the output filename with version
