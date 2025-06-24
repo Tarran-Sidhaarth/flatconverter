@@ -48,7 +48,7 @@ buffman convert flatbuffers --proto_dir ./my-protos --output_dir ./my-fbs
 
 To use `buffman.yml`, define the input directory and plugin configuration like this:
 
-```
+```yaml
 version: v1
 input:
   directory: "./schemas"

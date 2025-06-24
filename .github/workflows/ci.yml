@@ -1,6 +1,7 @@
 # .github/workflows/ci.yml
 name: CI/CD Pipeline
 
+
 on:
   push:
     branches: [ main, staging ]
@@ -9,8 +10,10 @@ on:
   pull_request:
     branches: [ main ]
 
+
 env:
   GO_VERSION: '1.24.1'
+
 
 jobs:
   test:
@@ -47,14 +50,24 @@ jobs:
         flags: unittests
         name: codecov-umbrella
 
+
   build:
     name: Build
     runs-on: ubuntu-latest
     needs: [test]
     strategy:
       matrix:
-        goos: [linux, darwin]
-        goarch: [amd64, arm64]
+        include:
+          - goos: linux
+            goarch: amd64
+          - goos: linux
+            goarch: arm64
+          - goos: darwin
+            goarch: amd64
+          - goos: darwin
+            goarch: arm64
+          - goos: windows
+            goarch: 386
     steps:
     - uses: actions/checkout@v4
     
@@ -84,13 +97,12 @@ jobs:
         # Map architecture names
         ARCH_NAME="${GOARCH}"
         if [ "$GOARCH" = "amd64" ]; then
-          ARCH_NAME="amd64"
+          ARCH_NAME="x86-64"
         elif [ "$GOARCH" = "arm64" ]; then
-          ARCH_NAME="arm64"
+          ARCH_NAME="aarch64"
+        elif [ "$GOARCH" = "386" ]; then
+          ARCH_NAME="x86"
         fi
-        
-        # Set the output filename
-        OUTPUT_NAME="buffman-${GOOS}-${ARCH_NAME}"
         
         # Get version from git tag or commit
         VERSION=${{ github.ref_name }}
@@ -98,18 +110,21 @@ jobs:
           VERSION=$(git rev-parse --short HEAD)
         fi
         
+        # Set the output filename with version
+        OUTPUT_NAME="buffman-${GOOS}-${ARCH_NAME}-${VERSION}"
+        if [ "$GOOS" = "windows" ]; then
+          OUTPUT_NAME="${OUTPUT_NAME}.exe"
+        fi
+        
         # Build the binary with embedded version
         go build -ldflags="-s -w -X main.version=${VERSION} -X main.commit=$(git rev-parse HEAD) -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" -o "dist/${OUTPUT_NAME}" .
-        
-        # Create checksums
-        cd dist
-        sha256sum "${OUTPUT_NAME}" > "${OUTPUT_NAME}.sha256"
     
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: binaries-${{ matrix.goos }}-${{ matrix.goarch }}
         path: dist/
+
 
   release:
     name: Release

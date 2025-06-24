@@ -32,7 +32,7 @@ buffman generate flatbuffers --flatbuffers_dir ./my-fbs --language cpp --target_
 
 Define every language once and generate them all with one command.
 
-```
+```yaml
 version: v1
 input:
   directory: "./schemas"           # Where your .proto files live

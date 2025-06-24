@@ -4,18 +4,22 @@
   <img src="docs/buffman.png" alt="Buffman Logo" width="400" />
 </p>
 
-> \[!WARNING]
-> **Buffman is evolving fast 🚀**
+> **_NOTE_**: **Buffman is evolving fast 🚀**
 > This project is under active development. APIs, configurations, and features may change without notice. Use with caution in production environments.
->
-> **Buffman** is your friendly neighborhood CLI tool that wraps around the mighty `flatc` compiler. It simplifies converting `.proto` files to `.fbs`, and generates code in multiple languages using a declarative YAML config (`buffman.yml`).
+
+**Buffman** is a CLI tool that wraps around the `flatc` compiler. It simplifies converting `.proto` files to `.fbs`, and generates code in multiple languages using a declarative YAML config (`buffman.yml`).
 
 ## Installation
 
 You can install Buffman in two ways:
 
 1. **Download Precompiled Binary**
-   Visit the [Releases page](https://github.com/your-org/buffman/releases) and download the binary for your OS.
+   Visit the [Releases page](releases/) and download the binary for your OS.
+    ```bash
+    curl -L https://github.com/machanirobotics/buffman/releases/download/v1.0.0/buffman-linux-x86-64-v1.0.0 -o buffman && \
+    sudo mv buffman /usr/local/bin/ && \
+    sudo chmod +x /usr/local/bin/buffman
+    ```
 
 2. **Build from Source**
 
@@ -31,7 +35,7 @@ You can install Buffman in two ways:
 
 Make sure a file named `buffman.yml` is present in your current directory. Here's a minimal example:
 
-```
+```yaml
 version: v1
 input:
   directory: "./protos"
@@ -68,7 +72,7 @@ buffman -f ./path/to/config.yml
 
 Buffman uses a YAML configuration file named `buffman.yml` to define your input directories, output locations, plugins, and language targets. Here’s the complete structure:
 
-```
+```yaml
 version: v1
 
 input:
@@ -133,7 +137,7 @@ The following languages are currently supported for code generation via FlatBuff
 
 ### Minimal example
 
-```
+```yaml
 version: v1
 input:
   directory: "./proto"
@@ -148,7 +152,7 @@ plugins:
 
 ### Multi-language production example
 
-```
+```yaml
 version: v1
 input:
   directory: "./schemas"
