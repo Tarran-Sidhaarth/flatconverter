@@ -1,20 +1,15 @@
-package converter
+package utilities
 
 import (
 	"os"
 	"strings"
-
-	"github.com/machanirobotics/buffman/pkg/template"
 )
 
-var t = template.NewTemplate("//")
-var comment = t.BuildDefaultComment("Flatbuffers")
-
-func (f *FlatConverter) insertGeneratedComments(fbsFilePath string) error {
+func InsertGeneratedComments(commentStr, langFilePath string) error {
 	// Read the entire file content
-	content, err := os.ReadFile(fbsFilePath)
+	content, err := os.ReadFile(langFilePath)
 	if err != nil {
-		return err
+		return &CommentInsertionError{Err: err}
 	}
 
 	// Convert to string and split into lines
@@ -25,9 +20,6 @@ func (f *FlatConverter) insertGeneratedComments(fbsFilePath string) error {
 		lines = lines[1:]
 	}
 
-	// Prepare the comment to prepend
-	commentStr := comment
-
 	// Join remaining lines back together
 	remainingContent := strings.Join(lines, "\n")
 
@@ -35,8 +27,12 @@ func (f *FlatConverter) insertGeneratedComments(fbsFilePath string) error {
 	newContent := commentStr + remainingContent
 
 	// Write the new content back to the file
-	err = os.WriteFile(fbsFilePath, []byte(newContent), 0644)
+	err = os.WriteFile(langFilePath, []byte(newContent), 0644)
 	if err != nil {
+		// remove the file if the commment generation fails
+		if err := os.Remove(langFilePath); err != nil {
+			return &CommentInsertionError{Err: err}
+		}
 		return err
 	}
 

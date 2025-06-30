@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/machanirobotics/buffman/pkg/generator"
+	"github.com/machanirobotics/buffman/internal/generate"
+	"github.com/machanirobotics/buffman/internal/generate/language"
+	"github.com/machanirobotics/buffman/internal/options"
+	"github.com/machanirobotics/buffman/internal/runner"
 	"github.com/spf13/cobra"
 )
 
@@ -16,9 +19,11 @@ var (
 	// targetDir specifies the output directory for the generated code.
 	targetDir string
 	// language defines the target programming language for code generation.
-	language string
+	lang string
 	// moduleOptions provides language-specific options, like a package prefix.
 	moduleOptions string
+	//
+	buffmanConfigPath string
 )
 
 // flatbuffersCmd represents the command to generate code from FlatBuffer schemas.
@@ -39,39 +44,45 @@ Example:
     --language=go \
     --module_options="github.com/your-org/your-project/gen/go"`,
 	Run: func(cmd *cobra.Command, args []string) {
-
-		lang := generator.NewLanguage(language)
-		if lang.Language == generator.UNKNOWN {
-			fmt.Println("unsupported language")
-			os.Exit(1)
-		}
-
-		g, err := generator.NewGenerator(generator.FLATBUFFER, flatbuffersDir, targetDir, map[generator.Languages]string{lang.Language: moduleOptions})
+		g, err := generate.NewGenerate(generate.Flatbuffers)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		if err := g.Generate(context.Background(), []generator.Languages{lang.Language}); err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+		if buffmanConfigPath != "" {
+			run := runner.NewRunner()
+			if err := run.Run(context.Background(), buffmanConfigPath); err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		} else {
+			if lang == "" || targetDir == "" {
+				fmt.Println("please enter a language and output directory or specify a buffman config file")
+			} else {
+				if err := g.Generate(context.Background(), options.GenerateOptions{
+					InputDir: flatbuffersDir,
+					LanguagDetails: map[language.Language]options.LanguageGenerateOptions{
+						language.Language(lang): {
+							OutputDir: targetDir,
+							Opts:      []string{moduleOptions},
+						},
+					},
+				}); err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+				fmt.Printf("Successfully generated %s files in %s\n", lang, targetDir)
+			}
 		}
-
-		fmt.Printf("Successfully generated %s files in %s\n", language, targetDir)
 	},
 }
 
 func init() {
-	// Attach the flatbuffersCmd to its parent, GenerateCmd.
-	GenerateCmd.AddCommand(flatbuffersCmd)
-
 	// Define flags for the 'generate flatbuffers' command.
 	flatbuffersCmd.Flags().StringVarP(&flatbuffersDir, "flatbuffers_dir", "I", "", "Directory containing the source .fbs schema files")
 	flatbuffersCmd.Flags().StringVarP(&targetDir, "target_dir", "o", "./", "Output directory for the generated source code")
-	flatbuffersCmd.Flags().StringVarP(&language, "language", "l", "", "Target language for code generation (e.g., go, java, cpp, kotlin)")
+	flatbuffersCmd.Flags().StringVarP(&lang, "language", "l", "", "Target language for code generation (e.g., go, java, cpp, kotlin)")
 	flatbuffersCmd.Flags().StringVarP(&moduleOptions, "module_options", "m", "", "Language-specific options (e.g., Go package path or Java package name)")
-
-	// Mark essential flags as required.
-	flatbuffersCmd.MarkFlagRequired("flatbuffers_dir")
-	flatbuffersCmd.MarkFlagRequired("language")
+	flatbuffersCmd.Flags().StringVarP(&buffmanConfigPath, "file", "f", "", "path to buffman config file")
 }

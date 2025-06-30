@@ -1,4 +1,4 @@
-package converter
+package utilities
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 )
 
 // removeGoogleAPI removes Google API imports and options from proto files
-func removeGoogleAPI(ctx context.Context, compiler *protocompile.Compiler, files []string, outputDir, prefix string) (map[string][]byte, error) {
+func RemoveGoogleAPI(ctx context.Context, compiler *protocompile.Compiler, files []string, outputDir string) (map[string][]byte, error) {
 	fileDetails := make(map[string][]byte)
 	fds, err := compiler.Compile(ctx, files...)
 	if err != nil {
@@ -27,11 +27,7 @@ func removeGoogleAPI(ctx context.Context, compiler *protocompile.Compiler, files
 
 		// Write package
 		if fd.Package() != "" {
-			if prefix != "" {
-				builder.WriteString(fmt.Sprintf("package %s%s;\n\n", strings.Replace(prefix, "/", ".", -1), fd.Package()))
-			} else {
-				builder.WriteString(fmt.Sprintf("package %s;\n\n", fd.Package()))
-			}
+			builder.WriteString(fmt.Sprintf("package %s;\n\n", fd.Package()))
 		}
 
 		// Write imports excluding Google API imports and google/protobuf/descriptor.proto
@@ -43,11 +39,7 @@ func removeGoogleAPI(ctx context.Context, compiler *protocompile.Compiler, files
 			// Skip google/api imports and google/protobuf/descriptor.proto
 			if !strings.HasPrefix(importPath, "google/api") &&
 				!strings.Contains(importPath, "google/protobuf/descriptor.proto") {
-				if prefix != "" {
-					builder.WriteString(fmt.Sprintf("import \"%s%s\";\n", prefix, importPath))
-				} else {
-					builder.WriteString(fmt.Sprintf("import \"%s\";\n", importPath))
-				}
+				builder.WriteString(fmt.Sprintf("import \"%s\";\n", importPath))
 				hasImports = true
 			}
 		}
@@ -84,14 +76,14 @@ func removeGoogleAPI(ctx context.Context, compiler *protocompile.Compiler, files
 		messages := fd.Messages()
 		for i := 0; i < messages.Len(); i++ {
 			msg := messages.Get(i)
-			writeMessage(&builder, msg, 0, prefix)
+			writeMessage(&builder, msg, 0)
 		}
 
 		// Write services - special handling for google/longrunning
 		services := fd.Services()
 		for i := 0; i < services.Len(); i++ {
 			svc := services.Get(i)
-			writeService(&builder, svc, fd, prefix)
+			writeService(&builder, svc, fd)
 		}
 
 		// Store the built proto content in map with key as outputDir + fd.Path()
@@ -114,7 +106,7 @@ func writeEnum(builder *strings.Builder, enum protoreflect.EnumDescriptor) {
 }
 
 // writeMessage writes a message definition to the builder with proper indentation
-func writeMessage(builder *strings.Builder, msg protoreflect.MessageDescriptor, indent int, prefix string) {
+func writeMessage(builder *strings.Builder, msg protoreflect.MessageDescriptor, indent int) {
 	indentStr := strings.Repeat("  ", indent)
 
 	builder.WriteString(fmt.Sprintf("%smessage %s {\n", indentStr, msg.Name()))
@@ -141,7 +133,7 @@ func writeMessage(builder *strings.Builder, msg protoreflect.MessageDescriptor, 
 		for j := 0; j < fields.Len(); j++ {
 			field := fields.Get(j)
 			if field.ContainingOneof() == oneof {
-				writeField(builder, field, indent+2, prefix)
+				writeField(builder, field, indent+2)
 			}
 		}
 		builder.WriteString(fmt.Sprintf("%s  }\n", indentStr))
@@ -152,7 +144,7 @@ func writeMessage(builder *strings.Builder, msg protoreflect.MessageDescriptor, 
 	for i := 0; i < fields.Len(); i++ {
 		field := fields.Get(i)
 		if field.ContainingOneof() == nil {
-			writeField(builder, field, indent+1, prefix)
+			writeField(builder, field, indent+1)
 		}
 	}
 
@@ -160,42 +152,41 @@ func writeMessage(builder *strings.Builder, msg protoreflect.MessageDescriptor, 
 	nestedMessages := msg.Messages()
 	for i := 0; i < nestedMessages.Len(); i++ {
 		nested := nestedMessages.Get(i)
-		writeMessage(builder, nested, indent+1, prefix)
+		writeMessage(builder, nested, indent+1)
 	}
 
 	builder.WriteString(fmt.Sprintf("%s}\n\n", indentStr))
 }
 
 // writeField writes a field definition to the builder
-func writeField(builder *strings.Builder, field protoreflect.FieldDescriptor, indent int, prefix string) {
+func writeField(builder *strings.Builder, field protoreflect.FieldDescriptor, indent int) {
 	indentStr := strings.Repeat("  ", indent)
-	fieldType := getFieldType(field, prefix)
+	fieldType := getFieldType(field)
 	builder.WriteString(fmt.Sprintf("%s%s %s = %d;\n",
 		indentStr, fieldType, field.Name(), field.Number()))
 }
 
 // writeService writes a service definition to the builder
-func writeService(builder *strings.Builder, svc protoreflect.ServiceDescriptor, fd protoreflect.FileDescriptor, prefix string) {
+func writeService(builder *strings.Builder, svc protoreflect.ServiceDescriptor, fd protoreflect.FileDescriptor) {
 	builder.WriteString(fmt.Sprintf("service %s {\n", svc.Name()))
 	methods := svc.Methods()
 	for i := 0; i < methods.Len(); i++ {
 		method := methods.Get(i)
-		writeMethod(builder, method, prefix)
+		writeMethod(builder, method)
 	}
 	builder.WriteString("}\n\n")
 }
 
 // writeMethod writes a method definition to the builder
-func writeMethod(builder *strings.Builder, method protoreflect.MethodDescriptor, prefix string) {
-	inputType := getFullMessageName(method.Input(), prefix)
-	outputType := getFullMessageName(method.Output(), prefix)
+func writeMethod(builder *strings.Builder, method protoreflect.MethodDescriptor) {
+	inputType := getFullMessageName(method.Input())
+	outputType := getFullMessageName(method.Output())
 
 	rpcLine := fmt.Sprintf("  rpc %s(%s) returns (%s)", method.Name(), inputType, outputType)
 
 	// Check if method has options
 	opts := method.Options().(*descriptorpb.MethodOptions)
 	if opts != nil && len(opts.ProtoReflect().GetUnknown()) > 0 {
-		// If there are options, we'll write them (but skip google.api.http options)
 		rpcLine += " {\n"
 		// Here you could add logic to write non-google.api options if needed
 		rpcLine += "  }"
@@ -208,7 +199,7 @@ func writeMethod(builder *strings.Builder, method protoreflect.MethodDescriptor,
 
 // getFieldType returns the string representation of a field's type,
 // including repeated, message, and enum types with fully qualified names if necessary.
-func getFieldType(field protoreflect.FieldDescriptor, prefix string) string {
+func getFieldType(field protoreflect.FieldDescriptor) string {
 	repeatPrefix := ""
 	if field.Cardinality() == protoreflect.Repeated {
 		repeatPrefix = "repeated "
@@ -236,10 +227,10 @@ func getFieldType(field protoreflect.FieldDescriptor, prefix string) string {
 		baseType = "bytes"
 	case protoreflect.MessageKind:
 		msgDesc := field.Message()
-		baseType = getFullMessageName(msgDesc, prefix)
+		baseType = getFullMessageName(msgDesc)
 	case protoreflect.EnumKind:
 		enumDesc := field.Enum()
-		baseType = getFullEnumName(enumDesc, prefix)
+		baseType = getFullEnumName(enumDesc)
 	default:
 		baseType = "string"
 	}
@@ -248,7 +239,7 @@ func getFieldType(field protoreflect.FieldDescriptor, prefix string) string {
 }
 
 // getFullMessageName returns the fully qualified name of a message, including nested paths and package.
-func getFullMessageName(msgDesc protoreflect.MessageDescriptor, prefix string) string {
+func getFullMessageName(msgDesc protoreflect.MessageDescriptor) string {
 	var parts []string
 	current := msgDesc
 	for current != nil {
@@ -264,40 +255,28 @@ func getFullMessageName(msgDesc protoreflect.MessageDescriptor, prefix string) s
 		}
 	}
 
-	// Build the full name with package and prefix
 	fullName := strings.Join(parts, ".")
 	if pkg := msgDesc.ParentFile().Package(); pkg != "" {
-		if prefix != "" {
-			fullName = strings.Replace(prefix, "/", ".", -1) + string(pkg) + "." + fullName
-		} else {
-			fullName = string(pkg) + "." + fullName
-		}
+		fullName = string(pkg) + "." + fullName
 	}
-
 	return fullName
 }
 
 // getFullEnumName returns the fully qualified name of an enum, including nested paths and package.
-func getFullEnumName(enumDesc protoreflect.EnumDescriptor, prefix string) string {
+func getFullEnumName(enumDesc protoreflect.EnumDescriptor) string {
 	var parts []string
 	parts = append(parts, string(enumDesc.Name()))
 
 	if parent := enumDesc.Parent(); parent != nil {
 		if parentMsg, ok := parent.(protoreflect.MessageDescriptor); ok {
-			parentName := getFullMessageName(parentMsg, prefix)
+			parentName := getFullMessageName(parentMsg)
 			return parentName + "." + strings.Join(parts, ".")
 		}
 	}
 
-	// Build the full name with package and prefix
 	fullName := strings.Join(parts, ".")
 	if pkg := enumDesc.ParentFile().Package(); pkg != "" {
-		if prefix != "" {
-			fullName = strings.Replace(prefix, "/", ".", -1) + string(pkg) + "." + fullName
-		} else {
-			fullName = string(pkg) + "." + fullName
-		}
+		fullName = string(pkg) + "." + fullName
 	}
-
 	return fullName
 }

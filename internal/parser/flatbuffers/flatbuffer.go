@@ -1,11 +1,11 @@
 // Package converter implements conversion of Protocol Buffer files to FlatBuffers schemas.
-package converter
+package flatbuffers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -13,40 +13,33 @@ import (
 
 	"github.com/bufbuild/protocompile"
 	"github.com/bufbuild/protocompile/reporter"
+	"github.com/machanirobotics/buffman/internal/options"
+	"github.com/machanirobotics/buffman/internal/template"
+	"github.com/machanirobotics/buffman/internal/utilities"
 )
 
-// FlatConverter handles conversion of Protocol Buffer files to FlatBuffers schemas.
+// FlatbuffersParser handles conversion of Protocol Buffer files to FlatBuffers schemas.
 //
 // It manages compilation, cleaning, and file structure for the conversion process.
-type FlatConverter struct {
+type FlatbuffersParser struct {
 	compiler      *protocompile.Compiler
 	protoDir      string
 	cleanedDir    string
 	flatbufferDir string
-	prefix        string
 }
 
-// NewFlatConverter returns a new FlatConverter for converting proto files to FlatBuffers schemas.
+// NewFlatConverter returns a new FlatbuffersParser for converting proto files to FlatBuffers schemas.
 //
 // protoDir is the directory containing the input .proto files.
 // cleanedDir is the directory where cleaned proto files (without google API imports) will be written.
 // targetDir is the output directory for generated FlatBuffers schemas.
-func newFlatConverter(protoDir, targetDir, prefix string) (*FlatConverter, error) {
+func NewFlatbuffersParser() (*FlatbuffersParser, error) {
 	tempDir, err := os.MkdirTemp("", "cleaned")
 	if err != nil {
 		return nil, err
 	}
-	return &FlatConverter{
-		compiler: &protocompile.Compiler{
-			Resolver: &protocompile.SourceResolver{
-				ImportPaths: []string{protoDir},
-			},
-			Reporter: reporter.NewReporter(nil, nil),
-		},
-		protoDir:      protoDir,
-		cleanedDir:    tempDir,
-		flatbufferDir: targetDir,
-		prefix:        prefix,
+	return &FlatbuffersParser{
+		cleanedDir: tempDir,
 	}, nil
 }
 
@@ -57,20 +50,31 @@ func newFlatConverter(protoDir, targetDir, prefix string) (*FlatConverter, error
 // are deleted after conversion.
 //
 // Returns an error if any step of the process fails.
-func (c *FlatConverter) Convert(ctx context.Context) error {
-	if err := c.removeGoogleAPI(ctx); err != nil {
+func (c *FlatbuffersParser) Parse(ctx context.Context, opts options.ParseOptions) error {
+	c.compiler = &protocompile.Compiler{
+		Resolver: &protocompile.SourceResolver{
+			ImportPaths: []string{opts.InputDir},
+		},
+		Reporter: reporter.NewReporter(nil, nil),
+	}
+	c.protoDir = opts.InputDir
+	c.flatbufferDir = opts.OutputDir
+
+	if err := c.clearGoogleAPI(ctx); err != nil {
 		return fmt.Errorf("could not remove google api from protos %v", err)
 	}
 	if err := os.MkdirAll(c.flatbufferDir, 0755); err != nil {
 		return fmt.Errorf("failed to create flatbuffers directory: %v", err)
 	}
-	protoFiles, err := listProtoFiles(c.cleanedDir)
+	protoFiles, err := utilities.ListFilesRelativeToRoot(c.cleanedDir, ".proto")
 	if err != nil {
 		return fmt.Errorf("failed to find proto files: %v", err)
 	}
 	if len(protoFiles) == 0 {
-		return fmt.Errorf("no proto files found in %s", c.cleanedDir)
+		return errors.New("no proto files found")
 	}
+	t := template.NewTemplate("//")
+	comment := t.BuildDefaultComment("Flatbuffers")
 
 	fmt.Printf("🔄 Generating FlatBuffers schemas...\n")
 	fmt.Printf("   Source: %s\n", c.cleanedDir)
@@ -85,7 +89,7 @@ func (c *FlatConverter) Convert(ctx context.Context) error {
 			fmt.Printf("✗ Failed to convert %s: %v\n", protoFile, err)
 			errorCount++
 		} else {
-			if err := c.insertGeneratedComments(path.Join(c.flatbufferDir, strings.Replace(protoFile, ".proto", ".fbs", -1))); err != nil {
+			if err := utilities.InsertGeneratedComments(comment, path.Join(c.flatbufferDir, strings.Replace(protoFile, ".proto", ".fbs", -1))); err != nil {
 				fmt.Printf("✗ Failed to add generated comment: %v", err)
 				errorCount++
 			} else {
@@ -107,68 +111,11 @@ func (c *FlatConverter) Convert(ctx context.Context) error {
 	return os.RemoveAll(c.cleanedDir)
 }
 
-// removeGoogleAPI removes google API imports from proto files and writes cleaned files to the cleanedDir.
-//
-// Returns an error if proto files cannot be listed, cleaned, or written.
-func (c *FlatConverter) removeGoogleAPI(ctx context.Context) error {
-	cleanedDir := c.cleanedDir
-	files, err := listProtoFiles(c.protoDir)
-	if err != nil {
-		return err
-	}
-	if len(files) == 0 {
-		return fmt.Errorf("no proto files found")
-	}
-	if c.prefix != "" {
-		cleanedDir = path.Join(c.cleanedDir, c.prefix)
-	}
-	fileDetails, err := removeGoogleAPI(ctx, c.compiler, files, cleanedDir, c.prefix)
-	if err != nil {
-		return err
-	}
-
-	// Create files and necessary directories
-	return generateFiles(fileDetails)
-}
-
-// convertProtoFile converts a single proto file to a FlatBuffers schema using flatc.
-//
-// It creates the necessary output directory structure and post-processes the generated
-// .fbs file to fix include statements.
-//
-// Returns an error if conversion or post-processing fails.
-func (c *FlatConverter) convertProtoFile(ctx context.Context, protoFile string) error {
-	relPath, err := filepath.Rel(c.cleanedDir, path.Join(c.cleanedDir, protoFile))
-	if err != nil {
-		return fmt.Errorf("failed to get relative path: %w", err)
-	}
-	targetDir := filepath.Join(c.flatbufferDir, filepath.Dir(relPath))
-	if err := os.MkdirAll(targetDir, 0755); err != nil {
-		return fmt.Errorf("failed to create target directory %s: %w", targetDir, err)
-	}
-	cmd := exec.CommandContext(ctx, "flatc",
-		"--proto",
-		"-I", c.cleanedDir,
-		"-o", targetDir,
-		path.Join(c.cleanedDir, protoFile),
-	)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("flatc command failed: %w\nOutput: %s", err, string(output))
-	}
-	fbsFileName := strings.TrimSuffix(filepath.Base(protoFile), ".proto") + ".fbs"
-	fbsFilePath := filepath.Join(targetDir, fbsFileName)
-	if err := c.fixFBSIncludes(fbsFilePath); err != nil {
-		fmt.Printf("  ⚠️  Warning: failed to fix includes in %s: %v\n", fbsFileName, err)
-	}
-	return nil
-}
-
 // fixFBSIncludes modifies include/import statements in a FlatBuffers schema file.
 //
 // It replaces import statements with include statements and changes .proto extensions
 // to .fbs. If the file does not exist or cannot be written, an error is returned.
-func (c *FlatConverter) fixFBSIncludes(fbsFile string) error {
+func (c *FlatbuffersParser) fixFBSIncludes(fbsFile string) error {
 	if _, err := os.Stat(fbsFile); os.IsNotExist(err) {
 		return fmt.Errorf("FBS file not found: %s", fbsFile)
 	}

@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/machanirobotics/buffman/pkg/converter"
+	"github.com/machanirobotics/buffman/internal/options"
+	"github.com/machanirobotics/buffman/internal/parser"
 	"github.com/spf13/cobra"
 )
 
@@ -34,12 +35,15 @@ Example:
     --proto_dir=./path/to/protos \
     --output_dir=./gen/fbs`,
 	Run: func(cmd *cobra.Command, args []string) {
-		c, err := converter.NewConverter(converter.FLATBUFFER, protoDir, flatbufferDir, "")
+		c, err := parser.NewParser(parser.Flatbuffers)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		if err := c.Convert(context.Background()); err != nil {
+		if err := c.Parse(context.Background(), options.ParseOptions{
+			InputDir:  protoDir,
+			OutputDir: flatbufferDir,
+		}); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}

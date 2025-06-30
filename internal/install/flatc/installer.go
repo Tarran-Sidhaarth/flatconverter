@@ -26,13 +26,12 @@ var (
 		"windows": "windows",
 	}
 	flatcDownloadURL = map[string]string{
-		"linux-amd64":   "https://github.com/google/flatbuffers/releases/download/v" + flatcVersion + "/flatc-linux-x86_64.zip",
-		"linux-x86_64":  "https://github.com/google/flatbuffers/releases/download/v" + flatcVersion + "/Linux.flatc.binary.g++-13.zip",
-		"linux-arm64":   "https://github.com/google/flatbuffers/releases/download/v" + flatcVersion + "/flatc-linux-aarch64.zip",
-		"macos-amd64":   "https://github.com/google/flatbuffers/releases/download/v" + flatcVersion + "/flatc-macos-x86_64.zip",
-		"macos-arm64":   "https://github.com/google/flatbuffers/releases/download/v" + flatcVersion + "/flatc-macos-aarch64.zip",
-		"windows-amd64": "https://github.com/google/flatbuffers/releases/download/v" + flatcVersion + "/flatc-windows-x86_64.zip",
-		"windows-arm64": "https://github.com/google/flatbuffers/releases/download/v" + flatcVersion + "/flatc-windows-aarch64.zip",
+		"linux-x86_64":    "https://github.com/google/flatbuffers/releases/download/v" + flatcVersion + "/Linux.flatc.binary.g++-13.zip",
+		"linux-aarch64":   "https://github.com/google/flatbuffers/releases/download/v" + flatcVersion + "/Linux.flatc.binary.g++-13.zip",
+		"macos-x86_64":    "https://github.com/google/flatbuffers/releases/download/v" + flatcVersion + "/MacIntel.flatc.binary.zip",
+		"macos-aarch64":   "https://github.com/google/flatbuffers/releases/download/v" + flatcVersion + "/Mac.flatc.binary.zip",
+		"windows-x86_64":  "https://github.com/google/flatbuffers/releases/download/v" + flatcVersion + "/Windows.flatc.binary.zip",
+		"windows-aarch64": "https://github.com/google/flatbuffers/releases/download/v" + flatcVersion + "/Windows.flatc.binary.zip",
 	}
 )
 
