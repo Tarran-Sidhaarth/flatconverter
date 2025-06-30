@@ -5,44 +5,15 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/go-git/go-git/v6"
-	"github.com/go-git/go-git/v6/plumbing"
 )
 
 // GetGoogleProtobufFiles clones a specific commit from the protobuf repository,
 // extracts only the src/google/protobuf/ folder, and removes all non-.proto files.
-func GetGoogleProtobufFiles(url, commit, outputDir string) error {
-	// Create output directory if it doesn't exist
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
-		return fmt.Errorf("failed to create output directory: %w", err)
-	}
-
-	// Clone the repository
-	repo, err := git.PlainClone(outputDir, &git.CloneOptions{
-		URL: url,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to clone repository: %w", err)
-	}
-
-	// Get the working tree
-	worktree, err := repo.Worktree()
-	if err != nil {
-		return fmt.Errorf("failed to get worktree: %w", err)
-	}
-
-	// Checkout the specific commit
-	err = worktree.Checkout(&git.CheckoutOptions{
-		Hash: plumbing.NewHash(commit),
-	})
-	if err != nil {
-		return fmt.Errorf("failed to checkout commit %s: %w", commit, err)
-	}
+func HandleGoogleProtobufFiles(googleProtbufDir string) error {
 
 	// Extract only the src/google/protobuf/ folder and clean up
 	targetFolder := "src/google/protobuf"
-	if err := extractAndCleanProtobufFolder(outputDir, targetFolder); err != nil {
+	if err := extractAndCleanProtobufFolder(googleProtbufDir, targetFolder); err != nil {
 		return fmt.Errorf("failed to extract and clean protobuf folder: %w", err)
 	}
 
@@ -71,7 +42,36 @@ func extractAndCleanProtobufFolder(repoDir, targetFolder string) error {
 			return err
 		}
 
+		// Skip subdirectories - only process files in the root target folder
+		if info.IsDir() && path != sourcePath {
+			return filepath.SkipDir
+		}
+
 		if !info.IsDir() && strings.HasSuffix(strings.ToLower(info.Name()), ".proto") {
+			fileName := info.Name()
+
+			// Read file contents to check for filtering criteria
+			content, err := os.ReadFile(path)
+			if err != nil {
+				return fmt.Errorf("failed to read file %s: %w", path, err)
+			}
+
+			contentStr := string(content)
+
+			// Skip files with 'syntax = "proto2";' except 'descriptor.proto'
+			if strings.Contains(contentStr, `syntax = "proto2";`) && !strings.Contains(fileName, "descriptor.proto") {
+				return nil
+			}
+
+			if strings.Contains(fileName, "unittest") {
+				return nil
+			}
+
+			// Skip files with 'edition' in the content
+			if strings.Contains(contentStr, `edition = "202`) {
+				return nil
+			}
+
 			// Calculate relative path from source
 			relPath, err := filepath.Rel(sourcePath, path)
 			if err != nil {

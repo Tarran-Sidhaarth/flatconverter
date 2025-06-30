@@ -8,8 +8,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/machanirobotics/buffman/cmd/convert"
 	"github.com/machanirobotics/buffman/cmd/generate"
-	convert "github.com/machanirobotics/buffman/cmd/parser"
 	"github.com/machanirobotics/buffman/internal/install"
 	"github.com/spf13/cobra"
 )

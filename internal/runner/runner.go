@@ -6,13 +6,14 @@ package runner
 import (
 	"context"
 	"fmt"
+	"path"
+	"strings"
 
 	"github.com/machanirobotics/buffman/internal/configuration"
 	"github.com/machanirobotics/buffman/internal/generate"
-	"github.com/machanirobotics/buffman/internal/generate/language"
-	"github.com/machanirobotics/buffman/internal/options"
 	"github.com/machanirobotics/buffman/internal/parser"
 	"github.com/machanirobotics/buffman/internal/remote"
+	"github.com/machanirobotics/buffman/internal/utilities"
 )
 
 // Runner defines the high-level interface for executing tasks based on a config file.
@@ -53,28 +54,21 @@ func (r *runnerImpl) Run(ctx context.Context, filePath string) error {
 	if err := r.initializeRunner(config); err != nil {
 		return err
 	}
-	if err := r.Parser.ConvertAll(ctx, map[parser.ParserType]options.ParseOptions{
-		parser.Flatbuffers: options.ParseOptions{
-			InputDir:  r.ProtoDir,
-			OutputDir: config.Plugins[0].Out,
-		}}); err != nil {
+
+	parseOptions, err := r.getParserOptions(config)
+	if err != nil {
+		return err
+	}
+	if err := r.Parser.ConvertAll(ctx, parseOptions); err != nil {
 		return err
 	}
 
-	languageOptions := map[language.Language]options.LanguageGenerateOptions{}
-	for _, lang := range config.Plugins[0].Languages {
-		languageOptions[language.Language(lang.Language)] = options.LanguageGenerateOptions{
-			OutputDir: lang.Out,
-			Opts:      lang.Opt,
-		}
+	generateOptions, err := r.getGenerateOptions(config)
+	if err != nil {
+		return err
 	}
 
-	if err := r.Generate.GenerateAll(ctx, map[generate.GenerateType]options.GenerateOptions{
-		generate.Flatbuffers: options.GenerateOptions{
-			InputDir:       config.Plugins[0].Out,
-			LanguagDetails: languageOptions,
-		},
-	}); err != nil {
+	if err := r.Generate.GenerateAll(ctx, generateOptions); err != nil {
 		return err
 	}
 
@@ -83,28 +77,39 @@ func (r *runnerImpl) Run(ctx context.Context, filePath string) error {
 }
 
 func (r *runnerImpl) initializeRunner(config *configuration.Config) error {
-	protoDir := ""
 	rem, err := remote.NewRemote(remote.Github)
 	if err != nil {
 		return err
 	}
+	source := r.getSource(config)
+
 	for _, input := range config.Inputs {
-		if configuration.IsSource(input.Name) {
-			protoDir = input.Path
-		}
 		if input.Remote != "" {
-			var commit *string
-			if input.Commit != "" {
-				commit = &input.Commit
+
+			googleRepo := ""
+			if strings.Contains(input.Name, "google") {
+				googleRepo = "google"
 			}
-			if err := rem.Pull(remote.PullOptions{Out: "./", Url: input.Remote, Commit: commit}); err != nil {
+
+			remotePath := path.Join(source.Path, googleRepo, strings.Split(input.Remote, "/")[len(strings.Split(input.Remote, "/"))-1])
+			if input.Name == source.Name {
+				remotePath = input.Path
+			}
+
+			if err := rem.Pull(remote.PullOptions{Out: remotePath, Url: input.Remote, Commit: &input.Commit}); err != nil {
 				return err
+			}
+
+			if strings.Contains(input.Remote, "https://github.com/protocolbuffers/protobuf") {
+				if err := utilities.HandleGoogleProtobufFiles(remotePath); err != nil {
+					return err
+				}
 			}
 		}
 	}
 
 	parserManager := parser.NewManager()
-	if err := parserManager.RegisterParsers(parser.Flatbuffers); err != nil {
+	if err := parserManager.RegisterParsers(parser.Flatbuffers); err != nil { // add other parsers once it is there, this is statically defined
 		return err
 	}
 
@@ -115,7 +120,7 @@ func (r *runnerImpl) initializeRunner(config *configuration.Config) error {
 
 	r.Parser = parserManager
 	r.Generate = generateManager
-	r.ProtoDir = protoDir
+	r.ProtoDir = source.Path
 
 	return nil
 }

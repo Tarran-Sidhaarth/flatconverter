@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/machanirobotics/buffman/internal/configuration"
 	"github.com/machanirobotics/buffman/internal/generate"
 	"github.com/machanirobotics/buffman/internal/generate/language"
 	"github.com/machanirobotics/buffman/internal/options"
@@ -65,7 +66,7 @@ Example:
 					LanguagDetails: map[language.Language]options.LanguageGenerateOptions{
 						language.Language(lang): {
 							OutputDir: targetDir,
-							Opts:      []string{moduleOptions},
+							Opts:      []string{parseModuleOptions(language.Language(lang), moduleOptions)},
 						},
 					},
 				}); err != nil {
@@ -85,4 +86,9 @@ func init() {
 	flatbuffersCmd.Flags().StringVarP(&lang, "language", "l", "", "Target language for code generation (e.g., go, java, cpp, kotlin)")
 	flatbuffersCmd.Flags().StringVarP(&moduleOptions, "module_options", "m", "", "Language-specific options (e.g., Go package path or Java package name)")
 	flatbuffersCmd.Flags().StringVarP(&buffmanConfigPath, "file", "f", "", "path to buffman config file")
+}
+
+func parseModuleOptions(languageType language.Language, opt string) string {
+	commandOpts := configuration.CommandOptionsMap[languageType]
+	return commandOpts["flatbuffer"].Options["package"].Flag + " " + opt
 }

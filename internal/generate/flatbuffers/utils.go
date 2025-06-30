@@ -62,7 +62,10 @@ func generateLanguageFile(flatbufferDir, outputDir, opts string, languageMetadat
 	if err != nil {
 		return fmt.Errorf("failed to generate files: %v", err)
 	}
-	t := template.NewTemplate(languageMetadata.CommentStyle)
+	t, err := template.NewTemplate(languageMetadata.CommentStyle)
+	if err != nil {
+		return err
+	}
 	comment := t.BuildDefaultComment(string(languageMetadata.Language))
 	for _, filePath := range filePaths {
 		if err := utilities.InsertGeneratedComments(comment, path.Join(outputDir, filePath)); err != nil {

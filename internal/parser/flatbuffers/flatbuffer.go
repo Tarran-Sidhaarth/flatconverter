@@ -18,6 +18,8 @@ import (
 	"github.com/machanirobotics/buffman/internal/utilities"
 )
 
+const flatbufferCommetPrefix string = "//"
+
 // FlatbuffersParser handles conversion of Protocol Buffer files to FlatBuffers schemas.
 //
 // It manages compilation, cleaning, and file structure for the conversion process.
@@ -73,7 +75,10 @@ func (c *FlatbuffersParser) Parse(ctx context.Context, opts options.ParseOptions
 	if len(protoFiles) == 0 {
 		return errors.New("no proto files found")
 	}
-	t := template.NewTemplate("//")
+	t, err := template.NewTemplate(flatbufferCommetPrefix)
+	if err != nil {
+		return err
+	}
 	comment := t.BuildDefaultComment("Flatbuffers")
 
 	fmt.Printf("🔄 Generating FlatBuffers schemas...\n")

@@ -22,6 +22,9 @@ func RemoveGoogleAPI(ctx context.Context, compiler *protocompile.Compiler, files
 	for _, fd := range fds {
 		var builder strings.Builder
 
+		if fd.Syntax() != protoreflect.Proto3 {
+			continue
+		}
 		// Write syntax
 		builder.WriteString(fmt.Sprintf("syntax = \"%s\";\n\n", fd.Syntax()))
 

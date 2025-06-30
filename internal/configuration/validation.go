@@ -50,8 +50,8 @@ func validateInputs(c *Config) error {
 	for i, input := range c.Inputs {
 		if input.Name == "source" {
 			foundSource = true
-			if input.Path == "" {
-				return NewInvalidConfigErrorWithIndex("inputs", "path is required for input named 'source'", i)
+			if input.Path == "" && input.Remote == "" {
+				return NewInvalidConfigErrorWithIndex("inputs", "path or remote is required for input named 'source'", i)
 			}
 			// For "source", remote and commit are optional, so no error if missing
 		}
