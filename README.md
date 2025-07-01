@@ -28,10 +28,7 @@ You can install Buffman in two ways:
    Visit the [Releases page](releases/) and download the binary for your OS.
 
    ```bash
-   export BUFFMAN_VERSION="1.0.0" && \
-   curl -L "https://github.com/machanirobotics/buffman/releases/download/v$BUFFMAN_VERSION/buffman-linux-x86-64-$BUFFMAN_VERSION" -o buffman && \
-   sudo mv buffman /usr/local/bin/ && \
-   sudo chmod +x /usr/local/bin/buffman
+   curl -sSL https://raw.githubusercontent.com/machanirobotics/buffman/main/scripts/install.sh | bash
    ```
 
 2. **Build from Source**
