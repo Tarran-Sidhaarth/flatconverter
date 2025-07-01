@@ -29,7 +29,7 @@ const flatcCommand = "flatc %s %s -o %s %s %s"
 // with the combined stdout and stderr from the command for easier debugging.
 func executeCommand(flatbufferDir, language, includePaths, outputDir, opts string) error {
 
-	cmdStr := fmt.Sprintf(flatcCommand, includePaths, "--"+language, outputDir, "--"+opts, path.Join(flatbufferDir, "**/*.fbs"))
+	cmdStr := fmt.Sprintf(flatcCommand, includePaths, "--"+language, outputDir, opts, path.Join(flatbufferDir, "**/*.fbs"))
 	// Prepend 'shopt -s globstar;' to the command to enable recursive globbing
 	// for the duration of this command's execution.
 	fullCmd := fmt.Sprintf("shopt -s globstar; %s", cmdStr)

@@ -89,6 +89,10 @@ func init() {
 }
 
 func parseModuleOptions(languageType language.Language, opt string) string {
-	commandOpts := configuration.CommandOptionsMap[languageType]
+	commandOpts, ok := configuration.CommandOptionsMap[languageType]
+	if !ok {
+		return ""
+	}
+	fmt.Println("Command OPtions: ", commandOpts["flatbuffer"].Options["package"].Flag)
 	return commandOpts["flatbuffer"].Options["package"].Flag + " " + opt
 }

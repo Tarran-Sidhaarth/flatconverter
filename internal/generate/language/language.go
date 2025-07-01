@@ -14,7 +14,7 @@ const (
 	Csharp  Language = "csharp"
 	Python  Language = "python"
 	Rust    Language = "rust"
-	Ts      Language = "typescript"
+	Ts      Language = "ts"
 	Nim     Language = "nim"
 	Unknown Language = "unknown"
 )
