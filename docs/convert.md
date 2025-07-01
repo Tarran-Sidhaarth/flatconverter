@@ -4,8 +4,6 @@
 
 Welcome to the `convert` command. This is your tool for transforming `.proto` schema files into `.fbs` using the power of FlatBuffers. You can run conversions directly through the CLI or automate them using your `buffman.yml`.
 
----
-
 ## 🔧 Quick Command Reference
 
 | Command                                                   | Description                                           |
@@ -30,7 +28,6 @@ buffman convert flatbuffers -I ./my-protos -o ./my-fbs
 This reads all `.proto` files from the specified input directory and writes the converted `.fbs` files to the specified output directory.  
 If `--output_dir` is not provided, Buffman defaults to the current working directory.
 
----
 
 ## 🚀 Usage Modes
 
@@ -53,17 +50,11 @@ Then run:
 buffman convert flatbuffers -f ./buffman.yml
 ```
 
----
-
 ## 🚩 Flags
 
 | Flag           | Shorthand | Description                                                                     | Required |
 | -------------- | --------- | ------------------------------------------------------------------------------- | -------- |
 | `--proto_dir`  | `-I`      | The directory containing `.proto` files                                         | Yes      |
 | `--output_dir` | `-o`      | The directory where `.fbs` files will be written. Defaults to current directory | No       |
-
----
-
-Happy converting! 🎉
 
 [<-- Back to Main README](../README.md)

@@ -7,7 +7,6 @@ The `generate` command turns `.fbs` schema files into language-specific source c
 Currently supported:
 
 - `flatbuffers` — Generates code from `.fbs` using FlatBuffers
-- `nanobuffers` — *Coming soon!*
 
 This document covers the `flatbuffers` subcommand.
 
@@ -90,7 +89,5 @@ buffman generate -f ./buffman.yml
 
 This lets you run all conversions and code generation in one step based on your config file.  
 Subcommands like `flatbuffers` do **not** support `-f` and rely entirely on CLI flags.
-
-Happy generating! 💻
 
 [<-- Back to Main README](../README.md)
