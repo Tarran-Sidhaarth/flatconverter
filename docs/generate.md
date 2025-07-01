@@ -2,81 +2,94 @@
 
 # Buffman Generate 🚀🔥
 
-The `generate` command turns your FlatBuffer schemas (`.fbs`) into language-specific source code using the `flatc` compiler. Run it directly from the CLI for one-off jobs or configure every language you need in `buffman.yml` and let Buffman handle the rest.
+The `generate` command turns `.fbs` schema files into language-specific source code using the `flatc` compiler. Each backend format is handled through a subcommand.
+
+Currently supported:
+
+- `flatbuffers` — Generates code from `.fbs` using FlatBuffers
+- `nanobuffers` — *Coming soon!*
+
+This document covers the `flatbuffers` subcommand.
+
+## 📚 Table of Contents
+
+- [What is `flatbuffers`](#what-is-flatbuffers)
+- [Quick Command Reference](#quick-command-reference)
+- [Full Command](#full-command)
+- [Usage Modes](#usage-modes)
+  - [CLI Mode](#cli-mode)
+  - [Config Mode (Recommended)](#config-mode-recommended)
+- [Flags](#flags)
+- [Note on `-f` for configuration](#note-on--f-for-configuration)
+
+## 🧾 What is `flatbuffers`
+
+`buffman generate flatbuffers` uses FlatBuffers to generate code in multiple languages from `.fbs` files.
+
+It is a subcommand under `generate`, allowing Buffman to remain modular. Additional subcommands like `nanobuffers` will be supported in the future.
+
+To use a configuration-based setup, use the root `generate` command with the `-f` flag.
 
 ## 🔧 Quick Command Reference
 
-| Command                                                                                                                                   | Description                                    |
-| ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| `buffman`                                                                                                            | Generates code using settings in `buffman.yml` |
-| `buffman generate flatbuffers --I ./my-fbs --language go -o ./gen/go --module_options "github.com/me/project/fb"` | Generates code through CLI flags               |
+| Command                                                                                                                      | Description                                     |
+|------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------|
+| `buffman generate -f buffman.yml`                                                                                            | Generates all code defined in the config file   |
+| `buffman generate flatbuffers -I ./my-fbs -l go -o ./gen/go -m "go_package=github.com/me/project/fb"`                       | Generates Go code via CLI flags                 |
 
 ## 🧠 Full Command
 
 ```bash
-buffman generate flatbuffers -I ./my-fbs --language go -o ./gen/go --module_options "github.com/me/project/fb"
+buffman generate flatbuffers --flatbuffers_dir ./my-fbs --language go --target_dir ./gen/go --module_options "go_package=github.com/me/project/fb"
 ```
-If `-o` is omitted Buffman writes generated code to the current working directory.
+
+Or with shorthand:
+
+```bash
+buffman generate flatbuffers -I ./my-fbs -l go -o ./gen/go -m "go_package=github.com/me/project/fb"
+```
+
+If `--target_dir` is omitted, Buffman will write the generated code to the current working directory.
 
 ## 🚀 Usage Modes
 
 ### CLI Mode
 
-Best for quick, single-language generation.
+Use this mode for quick generation when targeting a single language:
 
 ```bash
-buffman generate flatbuffers --flatbuffers_dir ./my-fbs --language cpp --target_dir ./gen/cpp
+buffman generate flatbuffers -I ./my-fbs -l cpp -o ./gen/cpp
 ```
 
 ### Config Mode (Recommended)
 
-Define every language once and generate them all with one command.
-
-```yaml
-version: v1
-input:
-  directory: "./schemas"           # Where your .proto files live
-plugins:
-  - name: flatbuffers
-    out: "./build/fbs"             # Where the .fbs files were written by convert
-    languages:
-      - language: go
-        out: "./services/go/generated"
-        opt: "github.com/company/project/fb"
-      - language: cpp
-        out: "./native/cpp/generated"
-        opt: ""
-      - language: java
-        out: "./services/java/generated"
-        opt: "com.company.project.fb"
-      - language: ts
-        out: "./web/src/generated"
-        opt: ""
-      - language: python
-        out: "./analytics/generated"
-        opt: ""
-```
-
-Run everything with:
+Use `buffman.yml` to define your schemas and language targets, then run:
 
 ```bash
-buffman
+buffman generate -f ./buffman.yml
 ```
 
-To use a different configuration file:
+This approach is ideal for multi-language projects and CI automation.
 
-```bash
-buffman -f ./path/to/config.yml
-```
-
-## 🚩 Flags
+## 🚩 Flags (for `flatbuffers` subcommand)
 
 | Flag                | Shorthand | Description                                                             | Required |
-| ------------------- | --------- | ----------------------------------------------------------------------- | -------- |
+|---------------------|-----------|-------------------------------------------------------------------------|----------|
 | `--flatbuffers_dir` | `-I`      | Directory containing source `.fbs` files                                | Yes      |
-| `--language`        | `-l`      | Target language to generate (`go`, `cpp`, `java`, `kotlin`, etc.)       | Yes      |
+| `--language`        | `-l`      | Target language (`go`, `cpp`, `java`, `ts`, etc.)                       | Yes      |
 | `--target_dir`      | `-o`      | Directory to write generated code. Defaults to current directory        | No       |
-| `--module_options`  | `-m`      | Language-specific options such as Go module path or Java package prefix | No       |
+| `--module_options`  | `-m`      | Language-specific options (e.g., `go_package`, `java_package_prefix`)   | No       |
+
+## 🧾 Note on `-f` for configuration
+
+Only the **root `generate` command** supports the `-f` flag:
+
+```bash
+buffman generate -f ./buffman.yml
+```
+
+This lets you run all conversions and code generation in one step based on your config file.  
+Subcommands like `flatbuffers` do **not** support `-f` and rely entirely on CLI flags.
 
 Happy generating! 💻
 

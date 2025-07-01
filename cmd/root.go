@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/machanirobotics/buffman/cmd/completion"
 	"github.com/machanirobotics/buffman/cmd/convert"
 	"github.com/machanirobotics/buffman/cmd/generate"
 	"github.com/machanirobotics/buffman/internal/install"
@@ -22,11 +23,7 @@ var rootCmd = &cobra.Command{
 	Long: `Buffman is a versatile command-line tool designed to streamline the process
 of working with different buffer schemas. It simplifies converting Protocol Buffer
 (.proto) files into other formats like FlatBuffers (.fbs), with more formats
-planned for the future.
-
-All operations are driven by a central configuration file, typically 'buffman.yml',
-which defines the conversion and generation tasks. If no subcommand is specified,
-Buffman will run all tasks defined in the configuration file.`,
+planned for the future.`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -68,5 +65,5 @@ func Execute() {
 
 func init() {
 	// Add subcommands for 'convert' and 'generate' functionalities.
-	rootCmd.AddCommand(convert.ConvertCmd, generate.GenerateCmd)
+	rootCmd.AddCommand(convert.ConvertCmd, generate.GenerateCmd, completion.CompletionCmd)
 }

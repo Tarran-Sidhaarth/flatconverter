@@ -6,7 +6,7 @@
 
 **Buffman** is a CLI tool that wraps around the `flatc` compiler. It simplifies converting `.proto` files to `.fbs`, and generates code in multiple languages using a declarative YAML config (`buffman.yml`).
 
-> [!NOTE]
+> [!IMPORTANT]  
 > This project is under active development. APIs, configurations, and features may change without notice. Use with caution in production environments.
 
 - [Buffman](#buffman)
@@ -20,19 +20,19 @@
       + [Multi-language production example](#multi-language-production-example)
    * [License](#license)
 
-
 ## Installation
 
 You can install Buffman in two ways:
 
-1. **Download Precompiled Binary**
+1. **Download Precompiled Binary**  
    Visit the [Releases page](releases/) and download the binary for your OS.
-    ```bash
-    export BUFFMAN_VERSION="1.0.0" && \
-    curl -L "https://github.com/machanirobotics/buffman/releases/download/v$BUFFMAN_VERSION/buffman-linux-x86-64-$BUFFMAN_VERSION" -o buffman && \
-    sudo mv buffman /usr/local/bin/ && \
-    sudo chmod +x /usr/local/bin/buffman
-    ```
+
+   ```bash
+   export BUFFMAN_VERSION="1.0.0" && \
+   curl -L "https://github.com/machanirobotics/buffman/releases/download/v$BUFFMAN_VERSION/buffman-linux-x86-64-$BUFFMAN_VERSION" -o buffman && \
+   sudo mv buffman /usr/local/bin/ && \
+   sudo chmod +x /usr/local/bin/buffman
+   ```
 
 2. **Build from Source**
 
@@ -41,94 +41,119 @@ You can install Buffman in two ways:
    cd buffman
    go build -o buffman main.go
    ```
+> [!TIP]
+> Add the binary to your `PATH` for convenient use from anywhere.
 
-**Note:** Add the binary to your `PATH` for convenient use from anywhere.
 
 ## Quickstart
 
-Make sure a file named `buffman.yml` is present in your current directory. Here's a minimal example:
+Buffman requires a YAML configuration file and **does not** auto-detect it.  
+You **must specify the file explicitly** using the `-f` flag.
+
+Here's a minimal example config (`buffman.yml`):
 
 ```yaml
 version: v1
-input:
-  directory: "./protos"
+
+inputs:
+  - name: source
+    path: "./proto"
+
+  - name: googleprotobuf
+    remote: https://github.com/protocolbuffers/protobuf
+    commit: <commit-hash>
+
 plugins:
   - name: flatbuffers
     out: "./fbs"
     languages:
       - language: go
         out: "./generated/go"
-        opt: "github.com/username/project/fb"
+        opt:
+          - go_package=github.com/username/project/fb
 ```
 
 Then run:
 
 ```bash
-buffman
+buffman generate -f ./buffman.yml
 ```
 
-Buffman will automatically detect `buffman.yml` in the current directory. To use a custom path, use the `-f` flag:
+You can use any filename and location for the config—just update the path with `-f`.
 
-```bash
-buffman -f ./path/to/config.yml
-```
 
 ## Commands
 
-| Command    | Description                                                                                                                      |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `buffman`  | The root command. Executes conversion and generation as defined in `buffman.yml`. Use `-f` to specify a custom config file path. |
-| `convert`  | Converts `.proto` files to `.fbs` files using your `buffman.yml` settings. [Learn more](docs/convert.md)                         |
-| `generate` | Generates code in multiple languages from `.fbs` files as defined in `buffman.yml`. [Learn more](docs/generate.md)               |
+| Command             | Description                                                                                               |
+|---------------------|-----------------------------------------------------------------------------------------------------------|
+| `buffman generate`  | Generates code as defined in your config file. Use the `-f` flag to specify the config path.              |
+| `buffman convert`   | Converts `.proto` files to `.fbs` files using your config. [Learn more](docs/convert.md)                  |
+
+
 
 ## Configuration
 
-Buffman uses a YAML configuration file named `buffman.yml` to define your input directories, output locations, plugins, and language targets. Here’s the complete structure:
+Buffman uses a YAML configuration file (`buffman.yml`) to define your input sources, output directories, plugins, and language-specific options.
+
+### Structure
 
 ```yaml
 version: v1
 
-input:
-  directory: "./proto"
+inputs:
+  - name: source
+    path: "./proto"
+
+  # Optional external repositories
+  # - name: googleprotobuf
+  #   remote: https://github.com/protocolbuffers/protobuf
+  #   commit: <commit-hash>
 
 plugins:
   - name: flatbuffers
-    out: "./generated/fbs"  # Directory where .fbs files converted from .proto will be saved
+    out: "./fbs"
     languages:
       - language: cpp
         out: "./generated/cpp"
-        opt: ""
+
       - language: go
         out: "./generated/go"
-        opt: "github.com/username/project/fb"
+        opt:
+          - go_package=github.com/username/project/fb
+
       - language: java
         out: "./generated/java"
-        opt: "com.fb"
+        opt:
+          - java_package_prefix=com.fb
+
       - language: kotlin
         out: "./generated/kotlin"
-        opt: ""
+
       - language: php
         out: "./generated/php"
-        opt: ""
+
       - language: swift
         out: "./generated/swift"
-        opt: ""
+
       - language: dart
         out: "./generated/dart"
-        opt: ""
+
       - language: csharp
         out: "./generated/csharp"
-        opt: ""
+
       - language: python
         out: "./generated/python"
-        opt: ""
+
       - language: rust
         out: "./generated/rust"
-        opt: ""
+
       - language: ts
         out: "./generated/ts"
-        opt: ""
 ```
+
+- `inputs` define your schema sources.
+- `plugins` define how `.proto` files are converted and which language targets to generate.
+- `opt` is required only for `go` (`go_package`) and `java` (`java_package_prefix`).
 
 ## Supported Languages
 
@@ -152,44 +177,54 @@ The following languages are currently supported for code generation via FlatBuff
 
 ```yaml
 version: v1
-input:
-  directory: "./proto"
+inputs:
+  - name: source
+    path: "./proto"
+
 plugins:
   - name: flatbuffers
     out: "./fbs"
     languages:
       - language: go
         out: "./generated/go"
-        opt: "github.com/username/project/fb"
+        opt:
+          - go_package=github.com/username/project/fb
 ```
 
 ### Multi-language production example
 
 ```yaml
 version: v1
-input:
-  directory: "./schemas"
+inputs:
+  - name: source
+    path: "./schemas"
+
 plugins:
   - name: flatbuffers
     out: "./build/fbs"
     languages:
       - language: go
         out: "./services/go/generated"
-        opt: "github.com/company/project/fb"
+        opt:
+          - go_package=github.com/company/project/fb
+
       - language: cpp
         out: "./native/cpp/generated"
-        opt: ""
+
       - language: java
         out: "./services/java/generated"
-        opt: "com.company.project.fb"
+        opt:
+          - java_package_prefix=com.company.project.fb
+
       - language: ts
         out: "./web/src/generated"
-        opt: ""
+
       - language: python
         out: "./analytics/generated"
-        opt: ""
 ```
 
 ## License
+Buffman is open source under the MIT License. See `LICENSE` for full details.
 
-Buffman is open source under the MIT License. See [`LICENSE`](LICENSE) for full details.
+> [!NOTE]
+> For full documentation and advanced usage, [read the DOCS](./docs/).
