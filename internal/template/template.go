@@ -46,7 +46,7 @@ func (t *Template) BuildCustomComment(lines ...string) string {
 }
 
 // BuildCustomCommentf creates a single formatted comment line
-func (t *Template) BuildCustomCommentf(format string, args ...interface{}) string {
+func (t *Template) BuildCustomCommentf(format string, args ...any) string {
 	formattedLine := fmt.Sprintf(format, args...)
 	return t.BuildCustomComment(formattedLine)
 }

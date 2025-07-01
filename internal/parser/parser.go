@@ -1,5 +1,6 @@
-// Package converter provides interfaces and constructors for converting proto files
-// into different target formats (e.g., FlatBuffers).
+// Package parser provides interfaces and constructors for converting proto files
+// into different target formats (e.g., FlatBuffers). It uses a factory and
+// manager pattern to handle various parser implementations.
 package parser
 
 import (
@@ -10,36 +11,26 @@ import (
 	"github.com/machanirobotics/buffman/internal/parser/flatbuffers"
 )
 
-// ConverterType represents the type of converter to use.
+// ParserType represents the type of parser to use (e.g., "flatbuffers").
 type ParserType string
 
 const (
-	// CONVERTER_TYPE_FLATBUFFER specifies the FlatBuffer converter.
-	Flatbuffers = "flatbuffers"
+	// Flatbuffers specifies the parser for converting from Protocol Buffers to FlatBuffers.
+	Flatbuffers ParserType = "flatbuffers"
 )
 
-// Converter is the main interface for proto file conversion.
-//
-// Implementations of Converter should provide logic to convert proto files
-// from a source directory to a target format, optionally keeping cleaned files.
+// Parser is the main interface for a file format conversion utility.
+// Implementations are responsible for the logic of converting source files
+// (like .proto) into a different schema format.
 type Parser interface {
-	// Convert converts proto files according to the implementation.
-	//
-	// ctx: Context for cancellation and deadlines.
-	// keepCleaned: If true, retains intermediate cleaned files.
-	// Returns an error if the conversion fails.
+	// Parse executes the conversion process based on the provided options.
+	// The context can be used to handle cancellation or timeouts.
 	Parse(ctx context.Context, opts options.ParseOptions) error
 }
 
-// NewConverter returns a Converter implementation based on the provided ConverterType.
-//
-// converterType: The desired type of converter (e.g., CONVERTER_TYPE_FLATBUFFER).
-// protoDir: Directory containing the source proto files.
-// cleanedDir: Directory for storing cleaned proto files.
-// targetDir: Directory for the converted output.
-//
-// Returns a Converter and nil error on success.
-// Returns a non-nil error if the converterType is invalid.
+// NewParser acts as a factory, returning a concrete implementation of the Parser
+// interface based on the provided ParserType. It returns an error if the
+// requested type is unsupported.
 func NewParser(parserType ParserType) (Parser, error) {
 	switch parserType {
 	case Flatbuffers:
@@ -49,16 +40,21 @@ func NewParser(parserType ParserType) (Parser, error) {
 	}
 }
 
+// Manager holds and manages a collection of registered Parser implementations.
 type Manager struct {
 	parsers map[ParserType]Parser
 }
 
+// NewManager initializes and returns a new, empty Manager.
 func NewManager() *Manager {
 	return &Manager{
 		parsers: make(map[ParserType]Parser),
 	}
 }
 
+// RegisterParsers creates and registers one or more parsers in the manager.
+// It uses the NewParser factory and will return an error if any of the
+// requested parser types are unsupported.
 func (m *Manager) RegisterParsers(parserTypes ...ParserType) error {
 	for _, p := range parserTypes {
 		parser, err := NewParser(p)
@@ -70,17 +66,22 @@ func (m *Manager) RegisterParsers(parserTypes ...ParserType) error {
 	return nil
 }
 
+// GetParser retrieves a registered parser by its type. It returns nil if the
+// parser has not been registered.
 func (m *Manager) GetParser(parserType ParserType) Parser {
 	return m.parsers[parserType]
 }
 
+// ConvertAll executes the Parse method for all parsers that have corresponding
+// options in the parserOpts map. It returns an error if a parser for a given
+// option is not registered or if any parsing process fails.
 func (m *Manager) ConvertAll(ctx context.Context, parserOpts map[ParserType]options.ParseOptions) error {
-	for parserType := range parserOpts {
-		parser, exitst := m.parsers[parserType]
-		if !exitst {
+	for parserType, opts := range parserOpts {
+		parser, exists := m.parsers[parserType]
+		if !exists {
 			return errors.New("unsupported parser")
 		}
-		if err := parser.Parse(ctx, parserOpts[parserType]); err != nil {
+		if err := parser.Parse(ctx, opts); err != nil {
 			return err
 		}
 	}
