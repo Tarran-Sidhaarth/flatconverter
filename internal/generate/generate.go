@@ -1,6 +1,6 @@
-// package generator provides interfaces and implementations for generating code
-// from various schema definition files. It uses a factory pattern to create
-// specific generator instances.
+// package generate provides a factory and manager for different code generators,
+// allowing for a unified interface to generate source code from various
+// schema types.
 package generate
 
 import (
@@ -11,54 +11,49 @@ import (
 	"github.com/machanirobotics/buffman/internal/options"
 )
 
-// GeneratorType is an enumeration for different types of code generators.
-// It is used in the factory function to specify which generator to create.
+// GenerateType defines the type of code generator, used by the factory to
+// create a specific instance.
 type GenerateType string
 
 const (
-	// FLATBUFFER represents the FlatBuffers code generator.
+	// Flatbuffers represents the FlatBuffers code generator.
 	Flatbuffers GenerateType = "flatbuffers"
-	// Add other generator types here in the future.
+	// Additional generator types can be added here in the future.
 )
 
-// Generator defines the common interface for all code generators. Each generator
-// implementation must provide a method to perform the generation task.
+// Generate defines the interface for a code generator. Each implementation is
+// responsible for transforming schema files into language-specific source code.
 type Generate interface {
-	// Generate executes the code generation process for a given slice of target languages.
-	// The context can be used to handle cancellation or timeouts of the generation process.
+	// Generate executes the code generation process based on the provided options.
+	// The context can be used to manage cancellation or timeouts.
 	Generate(ctx context.Context, opts options.GenerateOptions) error
 }
 
-// NewGenerator acts as a factory function that constructs and returns a specific
-// implementation of the Generator interface based on the provided GeneratorType.
-// This is the primary entry point for acquiring a configured generator instance.
-//
-// Parameters:
-//   - generatorType: The type of generator to create (e.g., FLATBUFFER).
-//   - flatbufferDir: The source directory containing schema files (e.g., .fbs files).
-//   - targetDir: The base output directory where generated code will be placed.
-//   - packagePrefix: A map of language-specific options, such as package names or module prefixes.
-//
-// It returns a configured Generator instance or an error if the generatorType is
-// unsupported or if the initialization of the specific generator fails.
+// NewGenerate acts as a factory for creating Generate instances. It takes a
+// GenerateType and returns the corresponding generator implementation. It returns an
+// error if the requested type is unsupported.
 func NewGenerate(generateType GenerateType) (Generate, error) {
 	switch generateType {
 	case Flatbuffers:
-		// newFlatGenerator is defined in another file, e.g., flat_generator.go
 		return flatbuffers.NewFlatbuffersGenerate(), nil
 	default:
 		return nil, errors.New("unsupported generate type")
 	}
 }
 
+// Manager holds and manages a collection of registered code generators.
 type Manager struct {
 	generators map[GenerateType]Generate
 }
 
+// NewManager initializes and returns an empty Manager.
 func NewManager() *Manager {
 	return &Manager{generators: make(map[GenerateType]Generate)}
 }
 
+// RegisterGenerate creates and registers one or more generators in the manager.
+// It uses the NewGenerate factory and will return an error if any of the
+// requested generator types are unsupported.
 func (m *Manager) RegisterGenerate(generateTypes ...GenerateType) error {
 	for _, g := range generateTypes {
 		generate, err := NewGenerate(g)
@@ -70,17 +65,23 @@ func (m *Manager) RegisterGenerate(generateTypes ...GenerateType) error {
 	return nil
 }
 
+// GetGenerate retrieves a registered generator by its type. It returns nil if the
+// generator has not been registered.
 func (m *Manager) GetGenerate(generateType GenerateType) Generate {
 	return m.generators[generateType]
 }
 
+// GenerateAll executes the Generate method for all generators that have
+// corresponding options in the generateOpts map. It returns an error if a
+// generator for a given option is not registered or if any generation process
+// fails.
 func (m *Manager) GenerateAll(ctx context.Context, generateOpts map[GenerateType]options.GenerateOptions) error {
-	for generateType := range generateOpts {
+	for generateType, opts := range generateOpts {
 		generate, exists := m.generators[generateType]
 		if !exists {
 			return errors.New("unsupported generate type")
 		}
-		if err := generate.Generate(ctx, generateOpts[generateType]); err != nil {
+		if err := generate.Generate(ctx, opts); err != nil {
 			return err
 		}
 	}

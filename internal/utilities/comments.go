@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// InsertGeneratedComments adds the generated comment to the particular file
 func InsertGeneratedComments(commentStr, langFilePath string) error {
 	// Read the entire file content
 	content, err := os.ReadFile(langFilePath)

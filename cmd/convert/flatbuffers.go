@@ -1,3 +1,4 @@
+// Package convert provides commands for converting between different data serialization schema formats.
 package convert
 
 import (
@@ -10,30 +11,29 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Flags for the 'convert flatbuffers' command.
+// flags holds the command-line flags for the `convert flatbuffers` command.
 var (
 	// protoDir specifies the input directory containing .proto files.
 	protoDir string
-	// flatbufferDir specifies the output directory for the generated FlatBuffer files.
+	// flatbufferDir specifies the output directory for generated FlatBuffer files.
 	flatbufferDir string
 )
 
-// flatbuffersCmd represents the command to convert Protocol Buffer (.proto) files to FlatBuffer (.fbs) files[1].
+// flatbuffersCmd represents the cobra command to convert Protocol Buffer (.proto)
+// files to FlatBuffer (.fbs) schema files.
 var flatbuffersCmd = &cobra.Command{
 	Use:   "flatbuffers",
 	Short: "Converts Protocol Buffer (.proto) files to FlatBuffer (.fbs) schema files",
-	Long: `The 'flatbuffers' command converts Protocol Buffer schema files (.proto) into
-FlatBuffer schema files (.fbs). This is useful for migrating or enabling
-interoperability between these two serialization formats[1].
+	Long: `The flatbuffers command parses a directory of Protocol Buffer (.proto) files
+and converts them into FlatBuffer (.fbs) schema files. This facilitates
+migration and interoperability between systems using these two serialization formats.
 
-You must specify the directory containing your source .proto files. The output
-directory for the .fbs files can also be specified; otherwise, they are placed
-in the current directory by default[1].
+The command requires an input directory containing the source .proto files. An
+output directory can be specified; if omitted, the generated .fbs files will be
+placed in the current working directory.
 
 Example:
-  buffman convert flatbuffers \
-    --proto_dir=./path/to/protos \
-    --output_dir=./gen/fbs`,
+  buffman convert flatbuffers --proto_dir=./path/to/protos --output_dir=./gen/fbs`,
 	Run: func(cmd *cobra.Command, args []string) {
 		c, err := parser.NewParser(parser.Flatbuffers)
 		if err != nil {
@@ -51,11 +51,12 @@ Example:
 	},
 }
 
+// init registers and configures the flags for the flatbuffersCmd.
 func init() {
-	// Define and attach flags to the 'convert flatbuffers' command[1].
+	// Bind the protoDir and flatbufferDir variables to command-line flags.
 	flatbuffersCmd.Flags().StringVarP(&protoDir, "proto_dir", "I", "", "Directory containing the source .proto files")
 	flatbuffersCmd.Flags().StringVarP(&flatbufferDir, "output_dir", "o", "./", "Output directory for the generated FlatBuffer (.fbs) files")
 
-	// Mark the proto_dir flag as required since it's essential for the command to run[1].
+	// Mark the proto_dir flag as mandatory for command execution.
 	flatbuffersCmd.MarkFlagRequired("proto_dir")
 }

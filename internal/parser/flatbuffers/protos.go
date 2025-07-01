@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/machanirobotics/buffman/internal/utilities"
@@ -103,5 +104,28 @@ func (c *FlatbuffersParser) postProcessFBSFile(protoFile, targetDir string) erro
 		fmt.Printf("  ⚠️  Warning: failed to fix includes in %s: %v\n", fbsFileName, err)
 	}
 
+	return nil
+}
+
+// fixFBSIncludes modifies include statements in a generated FlatBuffers schema file.
+// It replaces `import "file.proto";` with `include "file.fbs";`.
+func (c *FlatbuffersParser) fixFBSIncludes(fbsFile string) error {
+	content, err := os.ReadFile(fbsFile)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("FBS file not found: %s", fbsFile)
+		}
+		return fmt.Errorf("failed to read FBS file: %w", err)
+	}
+
+	originalContent := string(content)
+	importPattern := regexp.MustCompile(`import\s+"([^"]+)\.proto"\s*;`)
+	modifiedContent := importPattern.ReplaceAllString(originalContent, `include "$1.fbs";`)
+
+	if modifiedContent != originalContent {
+		if err := os.WriteFile(fbsFile, []byte(modifiedContent), 0644); err != nil {
+			return fmt.Errorf("failed to write modified FBS file: %w", err)
+		}
+	}
 	return nil
 }

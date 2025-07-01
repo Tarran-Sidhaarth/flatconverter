@@ -1,6 +1,5 @@
-// package generate implements the "generate" command and its subcommands
-// for the Buffman CLI. It serves as a container for different code
-// generation functionalities.
+// Package generate provides the primary "generate" command, which serves as an
+// entry point for all code generation subcommands within the Buffman CLI.
 package generate
 
 import (
@@ -12,33 +11,37 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// buffmanConfigPath holds the path to the buffman.yaml configuration file,
+// provided via the -f or --file flag.
 var (
 	buffmanConfigPath string
 )
 
-// GenerateCmd represents the base command for the "generate" functionality.
-// It groups all code generation subcommands, such as 'flatbuffers'.
+// GenerateCmd represents the base "generate" command.
+// It acts as a dispatcher, either executing a generation run based on a
+// configuration file or delegating to a specific code generation subcommand
+// like 'flatbuffers'.
 var GenerateCmd = &cobra.Command{
 	Use:   "generate",
-	Short: "Contains subcommands for generating code from schema files",
-	Long: `The 'generate' command provides access to various code generators.
+	Short: "Generates code from schema files using a config or subcommands",
+	Long: `The 'generate' command is the entry point for all code generators.
 
-You can use this command in two ways:
+It can be used in two main ways:
 
-1. With a config file:
-   Use the -f flag to specify a buffman config file that contains all generation settings.
+1. With a configuration file:
+   Provide a path to a buffman.yaml file using the --file flag. This is the
+   recommended approach for managing all your code generation settings in one place.
 
-2. With subcommands:
-   Use a subcommand to specify the type of code to generate. For example, to
-   generate language-specific files from FlatBuffer schemas, use the 'flatbuffers'
-   subcommand.
+   Example:
+     buffman generate --file buffman.yaml
 
-Examples:
-  # Using config file
-  buffman generate -f ./buffman.yaml
+2. With a subcommand:
+   Invoke a specific generator directly, providing its options via flags.
 
-  # Using subcommand
-  buffman generate flatbuffers --language=go --target_dir=./gen`,
+   Example:
+     buffman generate flatbuffers --language=go --target_dir=./gen`,
+	// Run executes the logic for the generate command. If a configuration file
+	// path is provided, it uses the runner. Otherwise, it prints the help text.
 	Run: func(cmd *cobra.Command, args []string) {
 		if buffmanConfigPath != "" {
 			handleWithConfig(buffmanConfigPath)
@@ -48,11 +51,17 @@ Examples:
 	},
 }
 
+// init registers flags and adds subcommands to GenerateCmd.
 func init() {
-	GenerateCmd.Flags().StringVarP(&buffmanConfigPath, "file", "f", "", "path to buffman config file")
+	// The --file flag allows users to specify a configuration file for generation.
+	GenerateCmd.Flags().StringVarP(&buffmanConfigPath, "file", "f", "", "Path to the buffman.yaml configuration file")
+	// Add subcommands for specific generators.
 	GenerateCmd.AddCommand(flatbuffersCmd)
 }
 
+// handleWithConfig initializes and executes a runner to perform code generation
+// based on the settings in the provided configuration file. It exits the program
+// if the runner encounters an error.
 func handleWithConfig(configPath string) {
 	run := runner.NewRunner()
 	if err := run.Run(context.Background(), configPath); err != nil {
