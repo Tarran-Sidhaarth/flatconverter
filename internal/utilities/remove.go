@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/types/descriptorpb"
 )
 
-// removeGoogleAPI removes Google API imports and options from proto files
+// RemoveGoogleAPI removes Google API imports and options from proto files
 func RemoveGoogleAPI(ctx context.Context, compiler *protocompile.Compiler, files []string, outputDir string) (map[string][]byte, error) {
 	fileDetails := make(map[string][]byte)
 	fds, err := compiler.Compile(ctx, files...)

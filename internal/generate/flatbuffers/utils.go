@@ -23,12 +23,17 @@ const flatcCommand = "flatc %s %s -o %s %s %s"
 // matching (e.g., `**/*.fbs`). This is necessary for processing schema files
 // that are organized in nested directories.
 //
-// If the command fails, it returns an error that includes the combined stdout
+// If the command fails, it returns an error that includes the combinebuffmand stdout
 // and stderr from the command, providing context for debugging.
 func executeCommand(flatbufferDir, language, includePaths, outputDir, opts string) error {
 	// Construct the command string by populating the flatcCommand template.
 	// The final argument uses a glob pattern to find all .fbs files recursively.
-	cmdStr := fmt.Sprintf(flatcCommand, includePaths, "--"+language, outputDir, opts, path.Join(flatbufferDir, "**/*.fbs"))
+	flag := opts
+	if !strings.Contains(opts, "--") && opts != "" {
+		flag = "--" + opts
+	}
+
+	cmdStr := fmt.Sprintf(flatcCommand, includePaths, "--"+language, outputDir, flag, path.Join(flatbufferDir, "**/*.fbs"))
 
 	// Prepend 'shopt -s globstar;' to enable recursive globbing for this specific command.
 	// This ensures that the '**' pattern is correctly interpreted by the shell.
