@@ -14,7 +14,6 @@
    * [Quickstart](#quickstart)
    * [Commands](#commands)
    * [Configuration](#configuration)
-   * [Supported Languages](#supported-languages)
    * [Examples](#examples)
       + [Minimal example](#minimal-example)
       + [Multi-language production example](#multi-language-production-example)
@@ -167,22 +166,6 @@ plugins:
 - `plugins` define how `.proto` files are converted and which language targets to generate.
 - `opt` is required only for `go` (`go_package`) and `java` (`java_package_prefix`).
 
-## Supported Languages
-
-The following languages are currently supported for code generation via FlatBuffers:
-
-* `cpp`
-* `go`
-* `java`
-* `kotlin`
-* `php`
-* `swift`
-* `dart`
-* `csharp`
-* `python`
-* `rust`
-* `ts`
-
 ## Examples
 
 ### Minimal example
@@ -238,6 +221,3 @@ plugins:
 ## License
 
 Buffman is open source under the MIT License. See `LICENSE` for full details.
-
-> [!NOTE]
-> For full documentation and advanced usage, [read the DOCS](./docs/).
