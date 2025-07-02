@@ -22,7 +22,7 @@
 
 ## Installation
 
-You can install Buffman in two ways:
+You can install Buffman in three ways:
 
 1. **Download Precompiled Binary**  
    Visit the [Releases page](releases/) and download the binary for your OS.
@@ -38,9 +38,15 @@ You can install Buffman in two ways:
    cd buffman
    go build -o buffman main.go
    ```
+
+3. **Docker Image**
+
+   ```bash
+   docker pull ghcr.io/tarran-sidhaarth/buffman:latest
+   ```
+
 > [!TIP]
 > Add the binary to your `PATH` for convenient use from anywhere.
-
 
 ## Quickstart
 
@@ -76,8 +82,19 @@ Then run:
 buffman generate -f ./buffman.yml
 ```
 
-You can use any filename and location for the config—just update the path with `-f`.
+Or use Docker:
 
+```bash
+docker run --rm \
+    -v $(pwd):/buffman \
+    -w /buffman \
+    ghcr.io/tarran-sidhaarth/buffman:latest generate -f /buffman/buffman.yml
+```
+
+> [!NOTE]
+> When using Docker, all paths in your `buffman.yml` must be **relative to `/buffman`**, since that's where your local project is mounted in the container.
+
+You can use any filename and location for the config—just update the path with `-f`.
 
 ## Commands
 
@@ -85,8 +102,6 @@ You can use any filename and location for the config—just update the path with
 |---------------------|-----------------------------------------------------------------------------------------------------------|
 | `buffman generate`  | Generates code as defined in your config file. Use the `-f` flag to specify the config path.              |
 | `buffman convert`   | Converts `.proto` files to `.fbs` files using your config. [Learn more](docs/convert.md)                  |
-
-
 
 ## Configuration
 
@@ -221,6 +236,7 @@ plugins:
 ```
 
 ## License
+
 Buffman is open source under the MIT License. See `LICENSE` for full details.
 
 > [!NOTE]

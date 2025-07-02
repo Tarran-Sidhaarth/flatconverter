@@ -60,6 +60,20 @@ Use this mode for quick generation when targeting a single language:
 buffman generate flatbuffers -I ./my-fbs -l cpp -o ./gen/cpp
 ```
 
+**Run With Docker**
+
+```bash
+docker run --rm \
+    -v $(pwd):/buffman \
+    -w /buffman \
+    ghcr.io/tarran-sidhaarth/buffman generate flatbuffers \
+    -I /buffman/fbs \
+    -l cpp \
+    -o /buffman/gen/cpp
+```
+
+> 📌 When using Docker, paths passed to flags must be relative to `/buffman`, as that’s where the host directory is mounted.
+
 ### Config Mode (Recommended)
 
 Use `buffman.yml` to define your schemas and language targets, then run:
@@ -67,6 +81,18 @@ Use `buffman.yml` to define your schemas and language targets, then run:
 ```bash
 buffman generate -f ./buffman.yml
 ```
+
+**Run With Docker**
+
+```bash
+docker run --rm \
+    -v $(pwd):/buffman \
+    -w /buffman \
+    ghcr.io/tarran-sidhaarth/buffman generate \
+    -f /buffman/buffman.yml
+```
+
+> 📌 When using Docker, all paths inside `buffman.yml` must be relative to `/buffman`.
 
 This approach is ideal for multi-language projects and CI automation.
 
