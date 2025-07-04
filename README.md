@@ -6,6 +6,11 @@
 
 **Buffman** is a CLI tool that wraps around the `flatc` compiler. It simplifies converting `.proto` files to `.fbs`, and generates code in multiple languages using a declarative YAML config (`buffman.yml`).
 
+It currently supports two plugin types:
+
+- `flatbuffers` — multi-language code generation
+- `nanobuffers` — minimal and ultra-fast C-only serialization
+
 > [!IMPORTANT]  
 > This project is under active development. APIs, configurations, and features may change without notice. Use with caution in production environments.
 
@@ -74,6 +79,9 @@ plugins:
         out: "./generated/go"
         opt:
           - go_package=github.com/username/project/fb
+
+  - name: nanobuffers
+    out: "./nano"
 ```
 
 Then run:
@@ -161,27 +169,15 @@ plugins:
 
       - language: ts
         out: "./generated/ts"
+
+  - name: nanobuffers
+    out: "./nano"
 ```
 
 - `inputs` define your schema sources.
-- `plugins` define how `.proto` files are converted and which language targets to generate.
-- `opt` is required only for `go` (`go_package`) and `java` (`java_package_prefix`).
-
-## Supported Languages
-
-The following languages are currently supported for code generation via FlatBuffers:
-
-* `cpp`
-* `go`
-* `java`
-* `kotlin`
-* `php`
-* `swift`
-* `dart`
-* `csharp`
-* `python`
-* `rust`
-* `ts`
+- `plugins` define how `.proto` files are converted and which targets are generated.
+- `flatbuffers` supports multiple `languages` with optional config per target.
+- `nanobuffers` is **C-only**, so it does not require a `languages` field.
 
 ## Examples
 
@@ -201,6 +197,9 @@ plugins:
         out: "./generated/go"
         opt:
           - go_package=github.com/username/project/fb
+
+  - name: nanobuffers
+    out: "./nano"
 ```
 
 ### Multi-language production example
@@ -233,6 +232,9 @@ plugins:
 
       - language: python
         out: "./analytics/generated"
+
+  - name: nanobuffers
+    out: "./build/nano"
 ```
 
 ## License
@@ -240,4 +242,4 @@ plugins:
 Buffman is open source under the MIT License. See `LICENSE` for full details.
 
 > [!NOTE]
-> For full documentation and advanced usage, [read the DOCS](./docs/).
+> For full documentation and advanced usage, [read the DOCS](./docs/)
