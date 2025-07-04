@@ -19,7 +19,6 @@ It currently supports two plugin types:
    * [Quickstart](#quickstart)
    * [Commands](#commands)
    * [Configuration](#configuration)
-   * [Supported Languages](#supported-languages)
    * [Examples](#examples)
       + [Minimal example](#minimal-example)
       + [Multi-language production example](#multi-language-production-example)
@@ -178,6 +177,8 @@ plugins:
 - `plugins` define how `.proto` files are converted and which targets are generated.
 - `flatbuffers` supports multiple `languages` with optional config per target.
 - `nanobuffers` is **C-only**, so it does not require a `languages` field.
+- `plugins` define how `.proto` files are converted and which language targets to generate.
+- `opt` is required only for `go` (`go_package`) and `java` (`java_package_prefix`).
 
 ## Examples
 
