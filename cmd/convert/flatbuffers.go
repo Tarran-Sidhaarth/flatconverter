@@ -13,8 +13,7 @@ import (
 
 // flags holds the command-line flags for the `convert flatbuffers` command.
 var (
-	// protoDir specifies the input directory containing .proto files.
-	protoDir string
+
 	// flatbufferDir specifies the output directory for generated FlatBuffer files.
 	flatbufferDir string
 )

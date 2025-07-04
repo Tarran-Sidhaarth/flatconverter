@@ -52,12 +52,12 @@ func (r *runnerImpl) initializeRunner(config *configuration.Config) error {
 	}
 
 	parserManager := parser.NewManager()
-	if err := parserManager.RegisterParsers(parser.Flatbuffers); err != nil { // add other parsers once it is there, this is statically defined
+	if err := parserManager.RegisterParsers(parser.Flatbuffers, parser.Nanobuffers); err != nil { // add other parsers once it is there, this is statically defined
 		return err
 	}
 
 	generateManager := generate.NewManager()
-	if err := generateManager.RegisterGenerate(generate.Flatbuffers); err != nil {
+	if err := generateManager.RegisterGenerate(generate.Flatbuffers, generate.Nanobuffers); err != nil {
 		return err
 	}
 

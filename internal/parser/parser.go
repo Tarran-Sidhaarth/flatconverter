@@ -9,6 +9,7 @@ import (
 
 	"github.com/machanirobotics/buffman/internal/options"
 	"github.com/machanirobotics/buffman/internal/parser/flatbuffers"
+	"github.com/machanirobotics/buffman/internal/parser/nanobuffers"
 )
 
 // ParserType represents the type of parser to use (e.g., "flatbuffers").
@@ -17,6 +18,8 @@ type ParserType string
 const (
 	// Flatbuffers specifies the parser for converting from Protocol Buffers to FlatBuffers.
 	Flatbuffers ParserType = "flatbuffers"
+
+	Nanobuffers ParserType = "nanobuffers"
 )
 
 // Parser is the main interface for a file format conversion utility.
@@ -35,6 +38,8 @@ func NewParser(parserType ParserType) (Parser, error) {
 	switch parserType {
 	case Flatbuffers:
 		return flatbuffers.NewFlatbuffersParser()
+	case Nanobuffers:
+		return nanobuffers.NewNanobuffersParser()
 	default:
 		return nil, errors.New("unsupported parser type")
 	}

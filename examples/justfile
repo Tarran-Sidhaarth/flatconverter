@@ -1,4 +1,5 @@
 export:
+NANOBUFFER_DIR := "../examples/nanobuffers"
 FLATBUFFER_DIR := "../examples/flatbuffers"
 GO_DIR := "../examples/go/fb"
 GO_MODULE := "example.com/buffman/fb"
@@ -20,8 +21,13 @@ PROTO_DIR := "../examples/protos"
 build:
     go build -o ../buffman ../main.go
 
-convert:
+convert-flatbuffers:
     ../buffman convert flatbuffers -I "{{PROTO_DIR}}" -o "{{FLATBUFFER_DIR}}"
+
+convert-nanobuffers:
+    ../buffman convert nanobuffers -I "{{PROTO_DIR}}" -o "{{NANOBUFFER_DIR}}"
+
+convert: convert-flatbuffers convert-nanobuffers
 
 generate-go:
     ../buffman generate flatbuffers -I "{{FLATBUFFER_DIR}}" -o {{GO_DIR}} -l go -m "{{GO_MODULE}}"
@@ -58,6 +64,9 @@ generate-ts:
 
 generate: generate-go generate-java generate-cpp generate-kotlin generate-php generate-swift generate-dart generate-csharp generate-python generate-rust generate-ts 
 
+rm-nanobuffers: 
+    rm -rf nanobuffers
+
 rm-flatbuffers:
     rm -rf flatbuffers
 
@@ -72,7 +81,6 @@ rm-kotlin:
 
 rm-cpp:
     rm -rf cpp/*
-
 
 rm-php:
     rm -rf php/*
@@ -96,6 +104,6 @@ rm-ts:
     rm -rf ts/*
 
 
-rm: rm-flatbuffers rm-go rm-java rm-kotlin rm-cpp rm-php rm-swift rm-dart rm-csharp rm-python rm-rust rm-ts 
+rm: rm-nanobuffers rm-flatbuffers rm-go rm-java rm-kotlin rm-cpp rm-php rm-swift rm-dart rm-csharp rm-python rm-rust rm-ts 
 
 run: build rm convert generate

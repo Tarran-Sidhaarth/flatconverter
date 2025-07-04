@@ -5,6 +5,9 @@ package convert
 
 import "github.com/spf13/cobra"
 
+// protoDir specifies the input directory containing .proto files.
+var protoDir string
+
 // ConvertCmd represents the base "convert" command.
 // This command acts as a parent for all schema conversion subcommands,
 // such as converting Protocol Buffers to FlatBuffers.
@@ -25,5 +28,5 @@ the target output format.`,
 // This ensures that commands like 'convert flatbuffers' are available.
 func init() {
 	// flatbuffersCmd is defined in another file within this package (e.g., flatbuffers.go)
-	ConvertCmd.AddCommand(flatbuffersCmd)
+	ConvertCmd.AddCommand(flatbuffersCmd, nanobuffersCmd)
 }

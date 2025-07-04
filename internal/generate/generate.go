@@ -8,6 +8,7 @@ import (
 	"errors"
 
 	"github.com/machanirobotics/buffman/internal/generate/flatbuffers"
+	"github.com/machanirobotics/buffman/internal/generate/nanobuffers"
 	"github.com/machanirobotics/buffman/internal/options"
 )
 
@@ -18,6 +19,9 @@ type GenerateType string
 const (
 	// Flatbuffers represents the FlatBuffers code generator.
 	Flatbuffers GenerateType = "flatbuffers"
+
+	// Nanobuffers represents the NanoBuffers code generator
+	Nanobuffers GenerateType = "nanobuffers"
 	// Additional generator types can be added here in the future.
 )
 
@@ -36,6 +40,9 @@ func NewGenerate(generateType GenerateType) (Generate, error) {
 	switch generateType {
 	case Flatbuffers:
 		return flatbuffers.NewFlatbuffersGenerate(), nil
+
+	case Nanobuffers:
+		return nanobuffers.NewNanoBuffersGenerate(), nil
 	default:
 		return nil, errors.New("unsupported generate type")
 	}

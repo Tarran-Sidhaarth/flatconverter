@@ -136,7 +136,7 @@ func validatePlugin(plugin *Plugin, index int) error {
 			fmt.Sprintf("output path is required for plugin '%s'", plugin.Name), index)
 	}
 
-	if !plugin.HasAnyLanguage() {
+	if !plugin.HasAnyLanguage() && plugin.Name != "nanobuffers" {
 		return NewInvalidConfigErrorWithIndex("plugins",
 			fmt.Sprintf("plugin '%s' must have at least one language configured", plugin.Name), index)
 	}
