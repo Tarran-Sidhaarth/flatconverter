@@ -23,9 +23,18 @@ RUN apk add --no-cache \
     unzip \
     libc6-compat \
     bash \
-    shadow
+    shadow \
+    python3 \
+    py3-pip \
+    build-base \
+    python3-dev \
+    libffi-dev \
+    openssl-dev
 
-# Create group and user with matching UID/GID
+# Install Python packages RIGHT HERE - before user creation
+RUN pip install protobuf grpcio-tools --break-system-packages
+
+# Create group and user with matching UID/GID (keep your original commands)
 RUN groupadd -g $USER_GID $USERNAME && \
     useradd -u $USER_UID -g $USER_GID -m $USERNAME
 
@@ -35,6 +44,10 @@ RUN wget -O /tmp/flatc.zip https://github.com/google/flatbuffers/releases/downlo
     mv /tmp/flatc /usr/local/bin/flatc && \
     chmod +x /usr/local/bin/flatc && \
     rm -rf /tmp/flatc.zip
+
+RUN wget -O /tmp/nano.tar.gz https://jpa.kapsi.fi/nanopb/download/nanopb-0.4.9.1.tar.gz && \ 
+    tar -xzf /tmp/nano.tar.gz -C /tmp && \
+    ln -s /tmp/nanopb/generator/nanopb_generator.py /usr/local/bin/nanopb
 
 # Copy the binary from builder stage
 COPY --from=builder /app/buffman /usr/local/bin/buffman
